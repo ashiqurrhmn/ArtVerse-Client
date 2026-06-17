@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+:root {
+  --app-background: #FCF7EE;
+  --app-foreground: #2A3B22;
+  --app-primary: #546B41;
+  --app-primary-foreground: #FCF7EE;
+  --app-secondary: #99AD7A;
+  --app-secondary-foreground: #FCF7EE;
+  --app-accent: #E3D1B4;
+  --app-accent-foreground: #546B41;
+  --app-separator: #E3D1B4;
+  --app-muted: #E3D1B4;
+  --app-muted-foreground: #788A62;
+
+  background-color: var(--app-background);
+  color: var(--app-foreground);
+}
+
+.dark {
+  --app-background: #1C2616;
+  --app-foreground: #E8E0D4;
+  --app-primary: #99AD7A;
+  --app-primary-foreground: #1C2616;
+  --app-secondary: #546B41;
+  --app-secondary-foreground: #E8E0D4;
+  --app-accent: #2A3B22;
+  --app-accent-foreground: #E8E0D4;
+  --app-separator: #2A3B22;
+  --app-muted: #2A3B22;
+  --app-muted-foreground: #99AD7A;
+
+  background-color: var(--app-background);
+  color: var(--app-foreground);
+}
+
+@theme {
+  --color-background: var(--app-background);
+  --color-foreground: var(--app-foreground);
+  --color-primary: var(--app-primary);
+  --color-primary-foreground: var(--app-primary-foreground);
+  --color-secondary: var(--app-secondary);
+  --color-secondary-foreground: var(--app-secondary-foreground);
+  --color-accent: var(--app-accent);
+  --color-accent-foreground: var(--app-accent-foreground);
+  --color-separator: var(--app-separator);
+  --color-muted: var(--app-muted);
+  --color-muted-foreground: var(--app-muted-foreground);
+}
