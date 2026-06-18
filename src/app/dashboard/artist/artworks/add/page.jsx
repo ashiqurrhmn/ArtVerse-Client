@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { addArtwork } from "@/lib/actions/artworks";
+import { authClient } from "@/lib/auth-client";
 
 const categories = [
   { key: "painting", label: "Painting" },
@@ -21,6 +22,8 @@ export default function AddArtworkPage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -90,7 +93,10 @@ export default function AddArtworkPage() {
         category: data.category,
         price: data.price,
         image: imageUrl,
-        status: "reviewing"
+        status: "reviewing",
+        userName: user?.name,
+        email: user?.email,
+        date: new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }),
     };
 
     try {

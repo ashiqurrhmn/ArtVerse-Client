@@ -139,6 +139,7 @@ export default function ManageArtworksPage() {
                   <th className="px-6 py-4">Price</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4">View</th>
                   <th className="px-6 py-4 text-right rounded-tr-xl">Actions</th>
                 </tr>
               </thead>
@@ -166,6 +167,9 @@ export default function ManageArtworksPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="h-3.5 w-24 rounded-md bg-muted/40"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-16 rounded-md bg-muted/40"></div>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
@@ -202,6 +206,14 @@ export default function ManageArtworksPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-muted-foreground">{artwork.date || "Just now"}</td>
+                      <td className="px-6 py-4">
+                        <Link 
+                          href={`/artworks/${artwork._id}`} 
+                          className="inline-flex items-center text-[11px] font-bold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors hover:underline underline-offset-2"
+                        >
+                          View Details
+                        </Link>
+                      </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Link
