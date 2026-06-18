@@ -68,7 +68,7 @@ export default function AddArtworkPage() {
           <ArrowLeft className="size-4" />
           Back to Artworks
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-[26px]">
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
           Add New Artwork
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
@@ -82,7 +82,7 @@ export default function AddArtworkPage() {
         <div className="space-y-8">
 
           {/* Artwork Details Card */}
-          <section className="rounded-xl border border-separator bg-accent/30 dark:bg-accent/20 p-6">
+          <section className="rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6 shadow-xl shadow-black/5 dark:shadow-none">
             <h2 className="text-base font-semibold mb-5 flex items-center gap-2">
               <Sparkles className="size-4 text-primary" />
               Artwork Details
@@ -122,7 +122,7 @@ export default function AddArtworkPage() {
           </section>
 
           {/* Classification & Pricing Card */}
-          <section className="rounded-xl border border-separator bg-accent/30 dark:bg-accent/20 p-6">
+          <section className="rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6 shadow-xl shadow-black/5 dark:shadow-none">
             <h2 className="text-base font-semibold mb-5">Classification & Pricing</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -177,7 +177,7 @@ export default function AddArtworkPage() {
         <div className="lg:sticky lg:top-6 space-y-6">
 
           {/* Image Upload Card */}
-          <section className="rounded-xl border border-separator bg-accent/30 dark:bg-accent/20 p-6">
+          <section className="rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6 shadow-xl shadow-black/5 dark:shadow-none">
             <h2 className="text-base font-semibold mb-5 flex items-center gap-2">
               <ImageIcon className="size-4 text-primary" />
               Upload Image

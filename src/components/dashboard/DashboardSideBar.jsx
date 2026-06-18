@@ -354,7 +354,7 @@ export function DashboardSideBar() {
     <button
       onClick={handleSignOut}
       disabled={isSigningOut}
-      className="flex w-full cursor-pointer items-center gap-3 px-[28px] py-3 text-[12px] font-medium text-muted-foreground transition-all hover:bg-red-500/5 hover:text-red-500 disabled:opacity-50"
+      className="flex w-full cursor-pointer items-center gap-3 px-[28px] py-3 font-medium text-muted-foreground transition-all hover:bg-red-500/5 hover:text-red-500 disabled:opacity-50"
       type="button"
     >
       {isSigningOut ? (
