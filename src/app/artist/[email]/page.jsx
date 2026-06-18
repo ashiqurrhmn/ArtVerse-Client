@@ -1,0 +1,243 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { motion } from "framer-motion";
+import { MapPin, Link as LinkIcon, Eye, Leaf, Palette, ShoppingBag } from "lucide-react";
+import Link from "next/link";
+import { getArtworks } from "@/lib/api/artworks";
+import ArtworkCard from "@/components/ArtworkCard";
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
+
+export default function PublicArtistProfilePage() {
+  const params = useParams();
+  const email = decodeURIComponent(params?.email || "");
+
+  const [profile, setProfile] = useState(null);
+  const [artworks, setArtworks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!email) return;
+
+    const fetchArtistData = async () => {
+      try {
+        // Fetch profile
+        const profileRes = await fetch(`${BASE_URL}/api/profiles/${email}`);
+        const profileData = await profileRes.json();
+        setProfile(profileData);
+
+        // Fetch artworks
+        const artworksData = await getArtworks(email);
+        // Show both Published and reviewing artworks since there's no admin approval yet
+        const publishedArtworks = artworksData.filter(a => 
+          a.status === "Published" || 
+          a.status?.toLowerCase() === "reviewing"
+        );
+        setArtworks(publishedArtworks);
+      } catch (error) {
+        console.error("Failed to fetch artist data", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchArtistData();
+  }, [email]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="size-12 animate-spin rounded-full border-4 border-primary/20 border-t-primary"></div>
+          <p className="text-sm text-muted-foreground animate-pulse">Loading artist profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile || Object.keys(profile).length === 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-foreground">Artist Not Found</h2>
+          <p className="text-muted-foreground mt-2">The profile you are looking for does not exist.</p>
+          <Link href="/browse">
+            <button className="mt-6 rounded-full bg-primary px-6 py-2 font-medium text-primary-foreground hover:opacity-90">
+              Browse Artworks
+            </button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const userName = profile?.name || "Unknown Artist";
+  const userInitials = userName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const profileImage = profile?.profileImage;
+  const coverImage = profile?.coverImage;
+
+  return (
+    <div className="min-h-screen pb-20">
+      {/* ── Cover Banner ── */}
+      <div className="relative h-[250px] md:h-[350px] w-full bg-muted/30 overflow-hidden">
+        {coverImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={coverImage} alt="Cover" className="h-full w-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-background" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 sm:-mt-24 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Left Column: Profile Card */}
+          <div className="lg:col-span-1 space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-3xl border border-separator/60 bg-background/80 backdrop-blur-xl p-6 shadow-xl"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="relative mb-6 size-32 sm:size-40 shrink-0 rounded-full border-4 border-background bg-muted shadow-xl overflow-hidden">
+                  {profileImage ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={profileImage} alt={userName} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-primary/10 text-4xl font-bold text-primary">
+                      {userInitials}
+                    </div>
+                  )}
+                </div>
+
+                <h1 className="text-2xl font-bold text-foreground">{userName}</h1>
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                    Artist
+                  </span>
+                </div>
+
+                <div className="mt-6 flex justify-center gap-8 border-y border-separator/60 py-5 w-full">
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-foreground">{profile?.followers || 0}</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1">Followers</p>
+                  </div>
+                  <div className="w-px bg-separator/60"></div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-foreground">{profile?.itemsSold || 0}</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1">Items Sold</p>
+                  </div>
+                </div>
+
+                <p className="mt-6 text-sm text-muted-foreground">
+                  {profile?.bio || "This artist hasn't written a bio yet."}
+                </p>
+
+                <div className="w-full mt-6 space-y-3 text-sm text-left border-t border-separator/60 pt-6">
+                  <div className="flex items-center text-muted-foreground">
+                    <MapPin className="size-4 mr-3" />
+                    <span>{profile?.location || "Location not set"}</span>
+                  </div>
+                  
+                  {profile?.website && (
+                    <div className="flex items-center text-muted-foreground">
+                      <LinkIcon className="size-4 mr-3" />
+                      <a 
+                        href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="hover:text-primary transition-colors truncate"
+                      >
+                        {profile.website}
+                      </a>
+                    </div>
+                  )}
+                  
+                  {profile?.twitter && (
+                    <div className="flex items-center text-muted-foreground">
+                      <span className="size-4 mr-3 font-bold">X</span>
+                      <a 
+                        href={`https://twitter.com/${profile.twitter.replace(/^@/, '')}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="hover:text-primary transition-colors truncate"
+                      >
+                        {profile.twitter}
+                      </a>
+                    </div>
+                  )}
+                  
+                  {profile?.instagram && (
+                    <div className="flex items-center text-muted-foreground">
+                      <span className="size-4 mr-3 font-bold">IG</span>
+                      <a 
+                        href={`https://instagram.com/${profile.instagram.replace(/^@/, '')}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="hover:text-primary transition-colors truncate"
+                      >
+                        {profile.instagram}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Right Column: About & Artworks */}
+          <div className="lg:col-span-2 space-y-8 mt-6 sm:mt-24 lg:mt-0">
+            {/* About Section */}
+            {profile?.about && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="rounded-3xl border border-separator/60 bg-background/50 backdrop-blur-xl p-6 md:p-8"
+              >
+                <h3 className="text-lg font-bold text-foreground mb-4">About the Artist</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                  {profile.about}
+                </p>
+              </motion.div>
+            )}
+
+            {/* Artworks Portfolio */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-foreground">Portfolio</h3>
+                <span className="text-sm font-medium text-muted-foreground bg-muted/50 px-3 py-1 rounded-full">
+                  {artworks.length} {artworks.length === 1 ? 'Artwork' : 'Artworks'}
+                </span>
+              </div>
+              
+              {artworks.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {artworks.map((artwork, index) => (
+                    <ArtworkCard key={artwork._id} artwork={artwork} index={index} />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-3xl border border-separator/60 border-dashed bg-background/30 p-12 text-center">
+                  <Palette className="mx-auto size-10 text-muted-foreground/40 mb-4" />
+                  <h3 className="text-lg font-bold text-foreground">No artworks yet</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    This artist hasn't published any artworks yet.
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}

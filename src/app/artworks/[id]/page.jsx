@@ -129,15 +129,20 @@ export default function ArtworkDetailsPage() {
                 {artwork.title}
               </h1>
               
-              <div className="flex items-center gap-3 mb-6 md:mb-8 pb-6 md:pb-8 border-b border-separator/60">
-                <div className="flex size-10 md:size-12 items-center justify-center rounded-full bg-accent text-base md:text-lg font-bold text-primary shadow-inner">
-                  {(artwork.userName || "A")[0].toUpperCase()}
+              <Link href={`/artist/${artwork.email}`} className="flex items-center gap-3 mb-6 md:mb-8 pb-6 md:pb-8 border-b border-separator/60 hover:opacity-80 transition-opacity w-fit">
+                <div className="flex size-10 md:size-12 items-center justify-center rounded-full bg-accent text-base md:text-lg font-bold text-primary shadow-inner overflow-hidden border-2 border-background">
+                  {artwork.artistImage ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={artwork.artistImage} alt={artwork.userName} className="h-full w-full object-cover" />
+                  ) : (
+                    (artwork.userName || "A")[0].toUpperCase()
+                  )}
                 </div>
                 <div>
                   <p className="text-xs md:text-sm font-medium text-muted-foreground">Created by</p>
-                  <p className="text-base md:text-lg font-bold text-foreground">{artwork.userName || "Alex Sterling"}</p>
+                  <p className="text-base md:text-lg font-bold text-foreground hover:text-primary transition-colors">{artwork.userName || "Unknown Artist"}</p>
                 </div>
-              </div>
+              </Link>
 
               {/* Price & Primary Actions */}
               <div className="mb-8 md:mb-10">

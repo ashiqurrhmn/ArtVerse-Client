@@ -93,7 +93,7 @@ export default function AddArtworkPage() {
         category: data.category,
         price: data.price,
         image: imageUrl,
-        status: "reviewing",
+        status: "Published",
         userName: user?.name,
         email: user?.email,
         date: new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }),

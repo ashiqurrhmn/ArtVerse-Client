@@ -2,8 +2,9 @@
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
 
-export const getArtworks = async () => {
-  const res = await fetch(`${baseUrl}/api/artworks`);
+export const getArtworks = async (email = null) => {
+  const url = email ? `${baseUrl}/api/artworks?email=${encodeURIComponent(email)}` : `${baseUrl}/api/artworks`;
+  const res = await fetch(url);
   const data = await res.json();
   return data;
 };

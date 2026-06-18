@@ -49,9 +49,38 @@ export default function ArtworkCard({ artwork, index }) {
             {artwork.title}
           </Link>
         </h3>
-        <p className="mt-1 text-xs font-medium text-muted-foreground line-clamp-1">
-          by <span className="text-foreground/90">{artwork.userName || "Alex Sterling"}</span>
-        </p>
+        {artwork.email ? (
+          <Link href={`/artist/${artwork.email}`} className="mt-2 flex items-center gap-2 pointer-events-auto relative z-30 group/artist">
+            <div className="size-5 rounded-full bg-accent/50 overflow-hidden flex items-center justify-center shrink-0 border border-separator/50 transition-colors group-hover/artist:border-primary">
+              {artwork.artistImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={artwork.artistImage} alt="Artist" className="size-full object-cover" />
+              ) : (
+                <span className="text-[10px] font-bold text-primary group-hover/artist:text-primary-foreground">
+                  {(artwork.userName || "A")[0].toUpperCase()}
+                </span>
+              )}
+            </div>
+            <p className="text-xs font-medium text-muted-foreground line-clamp-1">
+              by{" "}
+              <span className="text-foreground/90 group-hover/artist:text-primary transition-colors">
+                {artwork.userName || "Unknown Artist"}
+              </span>
+            </p>
+          </Link>
+        ) : (
+          <div className="mt-2 flex items-center gap-2 pointer-events-auto relative z-30">
+            <div className="size-5 rounded-full bg-accent/50 overflow-hidden flex items-center justify-center shrink-0 border border-separator/50">
+              <span className="text-[10px] font-bold text-primary">
+                {(artwork.userName || "A")[0].toUpperCase()}
+              </span>
+            </div>
+            <p className="text-xs font-medium text-muted-foreground line-clamp-1">
+              by{" "}
+              <span className="text-foreground/90">{artwork.userName || "Unknown Artist"}</span>
+            </p>
+          </div>
+        )}
 
         <div className="mt-4 flex items-center justify-between border-t border-separator/60 pt-3 pointer-events-auto relative z-30">
           <Link href={`/artworks/${artwork._id}`}>

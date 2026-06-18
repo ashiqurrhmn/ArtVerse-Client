@@ -15,6 +15,7 @@ import {
   ShoppingBag,
   Leaf,
   Loader2,
+  Users,
 } from "lucide-react";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
@@ -170,9 +171,8 @@ export default function ArtistProfilePage() {
 
   // Mock stats for the UI
   const stats = [
-    { label: "Flowers", value: "12.5K", icon: Leaf, color: "text-green-500", bg: "bg-green-500/10" },
+    { label: "Followers", value: "12.5K", icon: Users, color: "text-green-500", bg: "bg-green-500/10" },
     { label: "Artworks", value: "45", icon: Palette, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Total Views", value: "1.2M", icon: Eye, color: "text-purple-500", bg: "bg-purple-500/10" },
     { label: "Sales", value: "128", icon: ShoppingBag, color: "text-orange-500", bg: "bg-orange-500/10" },
   ];
 
@@ -430,7 +430,7 @@ export default function ArtistProfilePage() {
         {/* Right Column: Stats & Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {stats.map((stat, i) => (
               <motion.div
                 key={stat.label}
