@@ -25,10 +25,10 @@ export default function RootLayout({ children }) {
       <body className="overflow-x-hidden">
         <Providers>
           <Navbar />
-          <main className="max-w-7xl mx-auto px-2 min-h-screen">
+          <main className="min-h-screen">
             {children}
           </main>
-          <Footer/>
+          <Footer />
         </Providers>
       </body>
     </html>

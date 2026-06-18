@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -8,12 +10,19 @@ import {
 import { FaFacebook } from "react-icons/fa";
 import { BsInstagram, BsTwitter } from "react-icons/bs";
 import { LiaLinkedin } from "react-icons/lia";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  if (pathname.includes('/dashboard')) {
+    return null;
+  }
+  
   return (
-    <footer className="mt-16 border-t bg-background">
+    <footer className="mt-16 border-t  bg-background">
       <div className="container mx-auto px-4">
-        <div className="grid gap-10 py-12 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-10 max-w-7xl mx-auto py-12 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div>
             <Link href="/" className="inline-block">
@@ -144,7 +153,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-3 border-t py-6 text-center text-sm text-muted-foreground md:flex-row">
+        <div className="flex flex-col max-w-7xl mx-auto items-center justify-between gap-3 border-t py-6 text-center text-sm text-muted-foreground md:flex-row">
           <p>
             © {new Date().getFullYear()} ArtVerse. All rights reserved.
           </p>

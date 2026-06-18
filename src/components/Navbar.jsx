@@ -15,6 +15,10 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
 
+  if(pathname.includes('/dashboard')){
+    return null;
+  }
+
   const { data: session } = authClient.useSession();
   const user = session?.user;
 
