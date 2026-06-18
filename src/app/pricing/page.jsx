@@ -1,5 +1,8 @@
+"use client";
+
 import { Button } from "@heroui/react";
 import { Check } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function SellerPricingPage() {
   const plans = [
@@ -49,10 +52,30 @@ export default function SellerPricingPage() {
     },
   ];
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+  };
+
   return (
-    <main className="bg-background min-h-screen text-foreground">
+    <main className="bg-background min-h-screen text-foreground overflow-hidden">
       {/* Hero */}
-      <section className="mx-auto max-w-7xl px-4 py-16 md:py-24 text-center">
+      <motion.section 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="mx-auto max-w-7xl px-4 py-16 md:py-24 text-center"
+      >
         <span className="inline-flex rounded-full border border-separator bg-accent/30 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
           Become a Seller
         </span>
@@ -68,17 +91,24 @@ export default function SellerPricingPage() {
           Start selling on our marketplace and reach more customers with
           powerful tools, secure payments, and dedicated seller support.
         </p>
-      </section>
+      </motion.section>
 
       {/* Pricing */}
       <section className="mx-auto max-w-7xl px-4 pb-24">
-        <div className="grid gap-8 lg:grid-cols-3 lg:items-center">
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.1 }}
+          className="grid gap-8 lg:grid-cols-3 lg:items-center"
+        >
           {plans.map((plan) => (
-            <div
+            <motion.div
+              variants={itemVariants}
               key={plan.name}
               className={`relative rounded-[2rem] border bg-background/80 p-8 shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 ${
                 plan.popular 
-                  ? "border-primary ring-2 ring-primary/30 shadow-lg lg:scale-105 bg-white z-10" 
+                  ? "border-primary ring-2 ring-primary/30 shadow-lg lg:scale-105 bg-background z-10" 
                   : "border-separator"
               }`}
             >
@@ -117,14 +147,20 @@ export default function SellerPricingPage() {
               >
                 {plan.name === "Enterprise Seller" ? "Contact Sales" : "Become Seller"}
               </Button>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       {/* CTA */}
       <section className="mx-auto max-w-5xl px-4 py-24">
-        <div className="relative overflow-hidden rounded-[3rem] border border-separator bg-accent/20 p-12 text-center md:p-16">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="relative overflow-hidden rounded-[3rem] border border-separator bg-accent/20 p-12 text-center md:p-16"
+        >
           <div className="absolute inset-0 bg-secondary/5 mix-blend-multiply" />
           
           <div className="relative z-10">
@@ -138,7 +174,7 @@ export default function SellerPricingPage() {
               Apply as Seller
             </Button>
           </div>
-        </div>
+        </motion.div>
       </section>
     </main>
   );

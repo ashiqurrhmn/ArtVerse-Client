@@ -7,12 +7,15 @@
   --app-primary: #546B41;
   --app-primary-foreground: #FCF7EE;
   --app-secondary: #99AD7A;
-  --app-secondary-foreground: #FCF7EE;
-  --app-accent: #E3D1B4;
+  --app-secondary-foreground: #fcf7ee;
+  --app-accent: #e7d1ac;
   --app-accent-foreground: #546B41;
   --app-separator: #E3D1B4;
+  --app-navlight: #b28c5d;
   --app-muted: #E3D1B4;
   --app-muted-foreground: #788A62;
+  --app-banner-overlay: rgba(0, 0, 0, 0.40);
+  --app-banner-strip: var(--app-secondary);
 
   background-color: var(--app-background);
   color: var(--app-foreground);
@@ -20,16 +23,19 @@
 
 .dark {
   --app-background: #1C2616;
-  --app-foreground: #E8E0D4;
+  --app-foreground: #e8e0d4;
   --app-primary: #99AD7A;
   --app-primary-foreground: #1C2616;
   --app-secondary: #546B41;
   --app-secondary-foreground: #E8E0D4;
   --app-accent: #2A3B22;
-  --app-accent-foreground: #E8E0D4;
+  --app-accent-foreground: #e8e0d4;
   --app-separator: #2A3B22;
+  --app-navlight: #141E10;
   --app-muted: #2A3B22;
   --app-muted-foreground: #99AD7A;
+  --app-banner-overlay: rgba(0, 0, 0, 0.60);
+  --app-banner-strip: #141E10;
 
   background-color: var(--app-background);
   color: var(--app-foreground);
@@ -45,6 +51,7 @@
   --color-accent: var(--app-accent);
   --color-accent-foreground: var(--app-accent-foreground);
   --color-separator: var(--app-separator);
+  --color-navlight: var(--app-navlight);
   --color-muted: var(--app-muted);
   --color-muted-foreground: var(--app-muted-foreground);
 }

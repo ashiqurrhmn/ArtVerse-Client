@@ -4,6 +4,7 @@ import { authClient } from "@/lib/auth-client";
 import { Avatar, Button, Dropdown, Label } from "@heroui/react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 import { BiLogOut } from "react-icons/bi";
 import { CgProfile } from "react-icons/cg";
@@ -12,6 +13,7 @@ import { ThemeSwitcher } from "./ThemeSwitcher";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   const { data: session } = authClient.useSession();
   const user = session?.user;
@@ -71,8 +73,8 @@ const Navbar = () => {
           <ul className="hidden items-center gap-4 md:flex">
             <li>
               <Link
-                href="#"
-                className="font-medium text-foreground hover:text-primary transition-colors"
+                href="/browse"
+                className={`font-medium transition-colors ${pathname === '/browse' ? 'text-navlight dark:text-primary underline underline-offset-4 decoration-2' : 'text-foreground hover:text-navlight dark:hover:text-primary'}`}
               >
                 Browse Artworks
               </Link>
@@ -80,7 +82,7 @@ const Navbar = () => {
             <li>
               <Link 
                 href="/pricing"
-                className="font-medium text-foreground hover:text-primary transition-colors"
+                className={`font-medium transition-colors ${pathname === '/pricing' ? 'text-navlight dark:text-primary underline underline-offset-4 decoration-2' : 'text-foreground hover:text-navlight dark:hover:text-primary'}`}
               >
                 Pricing
               </Link>
@@ -165,17 +167,17 @@ const Navbar = () => {
           <div className="border-t border-separator md:hidden">
             <ul className="flex flex-col gap-2 p-4">
               <li>
-                <Link href="#" className="block py-2">
-                  Features
+                <Link href="/browse" className={`block py-2 font-medium ${pathname === '/browse' ? 'text-navlight dark:text-primary underline underline-offset-4 decoration-2' : 'text-foreground hover:text-navlight dark:hover:text-primary'}`}>
+                  Browse Artworks
                 </Link>
               </li>
               <li>
-                <Link href="#" className="block py-2 font-medium text-accent">
+                <Link href="/dashboard" className={`block py-2 font-medium ${pathname.startsWith('/dashboard') ? 'text-navlight dark:text-primary underline underline-offset-4 decoration-2' : 'text-foreground hover:text-navlight dark:hover:text-primary'}`}>
                   Dashboard
                 </Link>
               </li>
               <li>
-                <Link href="#" className="block py-2">
+                <Link href="/pricing" className={`block py-2 font-medium ${pathname === '/pricing' ? 'text-navlight dark:text-primary underline underline-offset-4 decoration-2' : 'text-foreground hover:text-navlight dark:hover:text-primary'}`}>
                   Pricing
                 </Link>
               </li>
