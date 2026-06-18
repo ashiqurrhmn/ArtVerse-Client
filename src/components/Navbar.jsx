@@ -10,17 +10,20 @@ import { BiLogOut } from "react-icons/bi";
 import { CgProfile } from "react-icons/cg";
 import { MdDashboard } from "react-icons/md";
 import { ThemeSwitcher } from "./ThemeSwitcher";
+import { useProfile } from "@/context/ProfileContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const { data: session } = authClient.useSession();
+  const { profile } = useProfile();
 
   if(pathname.includes('/dashboard')){
     return null;
   }
 
   const user = session?.user;
+  const avatarSrc = profile?.profileImage || user?.image;
 
 
   const handleSignOut = async () => {
@@ -110,7 +113,7 @@ const Navbar = () => {
                     <Avatar.Image
                       referrerPolicy="no-referrer"
                       alt={user?.name || "User"}
-                      src={user?.image}
+                      src={avatarSrc}
                     />
                     <Avatar.Fallback className="bg-accent text-primary font-bold">
                       {user?.name?.charAt(0) || "U"}
@@ -121,7 +124,7 @@ const Navbar = () => {
                   <div className="px-3 pt-2 pb-3 mb-2 border-b border-separator">
                     <div className="flex items-center gap-3">
                       <Avatar size="sm" className="border border-separator">
-                        <Avatar.Image alt={user?.name} src={user?.image} />
+                        <Avatar.Image alt={user?.name} src={avatarSrc} />
                         <Avatar.Fallback delayMs={600} className="bg-accent text-primary font-bold">
                           {user?.name?.charAt(0) || "U"}
                         </Avatar.Fallback>
@@ -158,7 +161,7 @@ const Navbar = () => {
                     </Dropdown.Item>
 
                     <Dropdown.Item key="profile" textValue="Profile" className="hover:bg-accent hover:text-primary transition-colors rounded-xl">
-                      <Link href={`/dashboard/profile`} className="flex items-center gap-3 w-full">
+                      <Link href={`/dashboard/artist/profile`} className="flex items-center gap-3 w-full">
                         <CgProfile className="text-lg" />
                         <Label className="font-medium cursor-pointer">Profile</Label>
                       </Link>
@@ -204,14 +207,16 @@ const Navbar = () => {
                 <span>Theme</span>
                 <ThemeSwitcher />
               </li>
-              <li className="mt-4 flex flex-col gap-2 border-t border-separator pt-4">
-                <Link href="/signin" className="block py-2 text-center border rounded-xl">
-                  Login
-                </Link>
-                <Link href="/signup">
-                  <Button className="w-full bg-primary text-primary-foreground font-medium rounded-full">Sign Up</Button>
-                </Link>
-              </li>
+              {!user && (
+                <li className="mt-4 flex flex-col gap-2 border-t border-separator pt-4">
+                  <Link href="/signin" className="block py-2 text-center border rounded-xl">
+                    Login
+                  </Link>
+                  <Link href="/signup">
+                    <Button className="w-full bg-primary text-primary-foreground font-medium rounded-full">Sign Up</Button>
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
         )}

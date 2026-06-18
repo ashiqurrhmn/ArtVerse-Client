@@ -1,14 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import { useSession } from "@/lib/auth-client";
 import { ThemeSwitcher } from "../ThemeSwitcher";
+import { useProfile } from "@/context/ProfileContext";
 
 export default function DashboardHeader() {
   const { data: session, isPending } = useSession();
   const user = session?.user;
   const userName = user?.name || user?.email || "User";
-  const userImage = user?.image;
+  const { profile } = useProfile();
+  const userImage = profile?.profileImage || user?.image;
   let userRole = user?.role || "buyer";
   if (userRole === "seller") userRole = "artist";
 
@@ -27,11 +28,10 @@ export default function DashboardHeader() {
       {!isPending && user && (
         <div className="flex items-center gap-3">
           {userImage ? (
-            <Image
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
               src={userImage}
               alt={userName}
-              width={64}
-              height={64}
               className="h-10 w-10 rounded-full object-cover border border-separator"
             />
           ) : (

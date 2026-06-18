@@ -2,22 +2,123 @@
 
 import { authClient } from "@/lib/auth-client";
 import { motion } from "framer-motion";
-import { 
-  Camera, 
-  MapPin, 
+import { useState, useEffect, useRef } from "react";
+import toast from "react-hot-toast";
+import { useProfile } from "@/context/ProfileContext";
+import {
+  Camera,
+  MapPin,
   Link as LinkIcon,
   Palette,
   Eye,
   ShoppingBag,
-  Leaf
+  Leaf,
+  Loader2,
 } from "lucide-react";
-import Image from "next/image";
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const IMGBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+
+async function uploadToImgbb(file) {
+  const formData = new FormData();
+  formData.append("image", file);
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+    method: "POST",
+    body: formData,
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error("Image upload failed");
+  return data.data.display_url;
+}
 
 export default function ArtistProfilePage() {
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
+  const { refreshProfile } = useProfile();
 
-  if (isPending) {
+  const [profile, setProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+
+  const avatarInputRef = useRef(null);
+  const coverInputRef = useRef(null);
+
+  // Fetch profile from DB
+  useEffect(() => {
+    if (!user?.email) return;
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/api/profiles/${user.email}`);
+        const data = await res.json();
+        setProfile(data);
+      } catch {
+        console.error("Failed to load profile");
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    fetchProfile();
+  }, [user?.email]);
+
+  // Save profile data to DB
+  const saveProfile = async (updates) => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/profiles/${user.email}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) {
+        setProfile((prev) => ({ ...prev, ...updates }));
+        return true;
+      }
+    } catch {
+      return false;
+    }
+  };
+
+  // Handle avatar upload
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const imageUrl = await uploadToImgbb(file);
+      const saved = await saveProfile({ profileImage: imageUrl });
+      if (saved) {
+        toast.success("Profile image updated!");
+        refreshProfile();
+      }
+      else toast.error("Failed to save profile image");
+    } catch {
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  // Handle cover upload
+  const handleCoverChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCover(true);
+    try {
+      const imageUrl = await uploadToImgbb(file);
+      const saved = await saveProfile({ coverImage: imageUrl });
+      if (saved) {
+        toast.success("Cover image updated!");
+        refreshProfile();
+      }
+      else toast.error("Failed to save cover image");
+    } catch {
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  if (isPending || loadingProfile) {
     return (
       <div className="flex h-full min-h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -31,6 +132,8 @@ export default function ArtistProfilePage() {
   const userName = user?.name || "Artist Name";
   const userEmail = user?.email || "artist@example.com";
   const userInitials = userName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const profileImage = profile?.profileImage || user?.image;
+  const coverImage = profile?.coverImage;
 
   // Mock stats for the UI
   const stats = [
@@ -41,29 +144,41 @@ export default function ArtistProfilePage() {
   ];
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-10">
+    <div className="space-y-6 px-10">
+      {/* Hidden File Inputs */}
+      <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={handleAvatarChange} />
+      <input type="file" ref={coverInputRef} className="hidden" accept="image/*" onChange={handleCoverChange} />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Artist Profile</h1>
           <p className="text-muted-foreground mt-1">Manage your public persona and view your stats.</p>
         </div>
-        <button className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5">
-          Edit Profile
-        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Profile Info */}
         <div className="lg:col-span-1 space-y-6">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="overflow-hidden rounded-3xl border border-separator/60 bg-background/50 backdrop-blur-xl shadow-xl shadow-black/5 dark:shadow-none"
           >
             {/* Cover Image */}
-            <div className="h-32 w-full bg-gradient-to-r from-emerald-500/80 via-teal-500/80 to-cyan-500/80 relative">
-              <button className="absolute right-3 top-3 p-2 rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/40 transition-colors">
-                <Camera className="size-4" />
+            <div
+              className="h-32 w-full relative bg-cover bg-center"
+              style={{
+                backgroundImage: coverImage
+                  ? `url(${coverImage})`
+                  : "linear-gradient(to right, rgba(16,185,129,0.8), rgba(20,184,166,0.8), rgba(6,182,212,0.8))",
+              }}
+            >
+              <button
+                onClick={() => coverInputRef.current?.click()}
+                disabled={uploadingCover}
+                className="absolute right-3 top-3 p-2 rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/40 transition-colors disabled:opacity-50"
+              >
+                {uploadingCover ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
               </button>
             </div>
 
@@ -71,9 +186,10 @@ export default function ArtistProfilePage() {
             <div className="relative px-6 pb-6 text-center">
               {/* Avatar */}
               <div className="absolute -top-12 left-1/2 -translate-x-1/2 rounded-full border-4 border-background bg-background shadow-xl">
-                {user?.image ? (
+                {profileImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={user.image}
+                    src={profileImage}
                     alt={userName}
                     className="size-24 rounded-full object-cover"
                   />
@@ -82,15 +198,19 @@ export default function ArtistProfilePage() {
                     {userInitials}
                   </div>
                 )}
-                <button className="absolute bottom-0 right-0 p-1.5 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors border-2 border-background">
-                  <Camera className="size-3" />
+                <button
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  className="absolute bottom-0 right-0 p-1.5 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors border-2 border-background disabled:opacity-50"
+                >
+                  {uploadingAvatar ? <Loader2 className="size-3 animate-spin" /> : <Camera className="size-3" />}
                 </button>
               </div>
 
               <div className="pt-16 pb-4">
                 <h2 className="text-xl font-bold text-foreground">{userName}</h2>
                 <p className="text-sm text-muted-foreground">{userEmail}</p>
-                
+
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
                   <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                     Pro Artist
@@ -102,25 +222,25 @@ export default function ArtistProfilePage() {
               </div>
 
               <p className="text-sm text-muted-foreground/80 pb-6 border-b border-separator/60">
-                Digital artist exploring the intersection of nature and technology. Creating vibrant, surreal landscapes that challenge our perception of reality.
+                {profile?.bio || "Digital artist exploring the intersection of nature and technology. Creating vibrant, surreal landscapes that challenge our perception of reality."}
               </p>
 
               <div className="pt-6 space-y-3 text-sm text-left">
                 <div className="flex items-center text-muted-foreground">
                   <MapPin className="size-4 mr-3" />
-                  <span>San Francisco, CA</span>
+                  <span>{profile?.location || "Location not set"}</span>
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <LinkIcon className="size-4 mr-3" />
-                  <a href="#" className="hover:text-primary transition-colors">artverse.com/artist/alex</a>
+                  <a href="#" className="hover:text-primary transition-colors">{profile?.website || "No website"}</a>
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <span className="size-4 mr-3 font-bold">X</span>
-                  <a href="#" className="hover:text-primary transition-colors">@alex_arts</a>
+                  <a href="#" className="hover:text-primary transition-colors">{profile?.twitter || "Not set"}</a>
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <span className="size-4 mr-3 font-bold">IG</span>
-                  <a href="#" className="hover:text-primary transition-colors">@alex.sterling</a>
+                  <a href="#" className="hover:text-primary transition-colors">{profile?.instagram || "Not set"}</a>
                 </div>
               </div>
             </div>
@@ -149,7 +269,7 @@ export default function ArtistProfilePage() {
           </div>
 
           {/* Activity / About section */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -158,7 +278,7 @@ export default function ArtistProfilePage() {
             <h3 className="text-lg font-bold text-foreground mb-4">About the Artist</h3>
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
-                I am a self-taught digital artist with a passion for creating immersive, surreal environments. My work often blends organic elements with futuristic cyberpunk aesthetics, aiming to evoke a sense of wonder and nostalgia.
+                {profile?.about || "I am a self-taught digital artist with a passion for creating immersive, surreal environments. My work often blends organic elements with futuristic cyberpunk aesthetics, aiming to evoke a sense of wonder and nostalgia."}
               </p>
               <p>
                 With a background in graphic design, I bring a strong sense of composition and color theory to my digital paintings. I've been creating art professionally for over 5 years and have been featured in several online galleries and digital exhibitions.

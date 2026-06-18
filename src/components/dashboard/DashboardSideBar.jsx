@@ -8,6 +8,7 @@ import { Bars } from "@gravity-ui/icons";
 import { Button, Drawer } from "@heroui/react";
 import { authClient } from "@/lib/auth-client";
 import { ThemeSwitcher } from "../ThemeSwitcher";
+import { useProfile } from "@/context/ProfileContext";
 
 // --- Icons ---
 const GridIcon = (props) => (
@@ -164,7 +165,8 @@ export function DashboardSideBar() {
   let userRole = user?.role || "buyer";
   if (userRole === "seller") userRole = "artist";
   const userName = user?.name || user?.email || "User";
-  const userImage = user?.image;
+  const { profile } = useProfile();
+  const userImage = profile?.profileImage || user?.image;
   const userPlan = user?.plan || "free";
   const normalizedPlan = userPlan.toLowerCase();
   const isPremium =
@@ -316,11 +318,10 @@ export function DashboardSideBar() {
     <div className="flex flex-col gap-3 px-1 py-2 w-full mt-2">
       <div className="flex items-center gap-3">
         {userImage ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={userImage}
             alt={userName}
-            width={44}
-            height={44}
             className="h-16 w-16 rounded-full object-cover border border-separator"
           />
         ) : (
