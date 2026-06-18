@@ -4,49 +4,41 @@ import { Button } from "@heroui/react";
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function SellerPricingPage() {
+export default function PricingPage() {
   const plans = [
     {
-      name: "Starter Seller",
-      price: "$4",
-      period: "/month",
-      description: "Perfect for new sellers starting their journey.",
+      name: "Free (Default)",
+      price: "$0",
+      period: "",
+      description: "Start exploring and purchasing artworks.",
       features: [
-        "Up to 50 products",
-        "Basic analytics",
-        "Order management",
-        "Seller profile",
-        "Email support",
+        "Up to 3 paintings purchases allowed",
+        "Basic support",
+        "Standard browsing",
       ],
       popular: false,
     },
     {
-      name: "Professional Seller",
-      price: "$14",
-      period: "/month",
-      description: "For growing businesses that need more visibility.",
+      name: "Pro",
+      price: "$9.99",
+      period: "",
+      description: "Perfect for art enthusiasts wanting more.",
       features: [
-        "Unlimited products",
-        "Advanced analytics",
-        "Priority product listing",
-        "Promotional campaigns",
-        "Inventory management",
+        "Up to 9 paintings purchases allowed",
         "Priority support",
+        "Early access to new art",
       ],
       popular: true,
     },
     {
-      name: "Enterprise Seller",
-      price: "Custom",
+      name: "Premium",
+      price: "$19.99",
       period: "",
-      description: "For brands and large-scale businesses.",
+      description: "For serious collectors and buyers.",
       features: [
-        "Everything in Professional",
-        "Dedicated account manager",
-        "Custom integrations",
-        "Featured homepage placement",
-        "API access",
-        "24/7 support",
+        "Unlimited paintings purchases",
+        "24/7 dedicated support",
+        "Exclusive VIP events",
       ],
       popular: false,
     },
@@ -77,19 +69,18 @@ export default function SellerPricingPage() {
         className="mx-auto max-w-7xl px-4 py-16 md:py-24 text-center"
       >
         <span className="inline-flex rounded-full border border-separator bg-accent/30 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
-          Become a Seller
+          Subscription Tier Overview
         </span>
 
         <h1 className="mt-8 text-4xl font-serif italic font-bold tracking-tight md:text-6xl text-foreground">
-          Grow Your Business
+          Choose Your Plan
           <span className="block text-primary mt-2 not-italic">
-            Sell to Thousands of Customers
+            Unlock More Purchases
           </span>
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground font-medium">
-          Start selling on our marketplace and reach more customers with
-          powerful tools, secure payments, and dedicated seller support.
+          Select a subscription tier that best fits your art collecting journey. Upgrade anytime to increase your maximum allowed purchases.
         </p>
       </motion.section>
 
@@ -145,7 +136,7 @@ export default function SellerPricingPage() {
                     : "bg-accent/40 text-foreground hover:bg-accent/60 border border-separator"
                 }`}
               >
-                {plan.name === "Enterprise Seller" ? "Contact Sales" : "Become Seller"}
+                {plan.name === "Free (Default)" ? "Current Plan" : `Upgrade to ${plan.name}`}
               </Button>
             </motion.div>
           ))}
@@ -164,14 +155,14 @@ export default function SellerPricingPage() {
           <div className="absolute inset-0 bg-secondary/5 mix-blend-multiply" />
           
           <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">Ready to Start Selling?</h2>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">Ready to Build Your Collection?</h2>
 
             <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
-              Join our marketplace today and start growing your online business in a community that values art.
+              Upgrade your account today to unlock higher purchase limits and exclusive benefits in our art community.
             </p>
 
             <Button className="mt-10 rounded-full bg-primary hover:bg-primary/90 px-10 py-6 font-bold text-primary-foreground shadow-md transition-all hover:scale-105 active:scale-95 text-base">
-              Apply as Seller
+              Get Started
             </Button>
           </div>
         </motion.div>

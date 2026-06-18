@@ -135,6 +135,25 @@ const LogoutIcon = (props) => (
   </svg>
 );
 
+const UsersIcon = (props) => (
+  <svg
+    viewBox="0 0 24 24"
+    width="20"
+    height="20"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    fill="none"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
 export function DashboardSideBar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -185,7 +204,22 @@ export function DashboardSideBar() {
     }
   };
 
-  const navItems = [
+  const adminNavItems = [
+    { icon: GridIcon, label: "Analytics Overview", href: "/dashboard/admin" },
+    { icon: UsersIcon, label: "Manage Users", href: "/dashboard/admin/users" },
+    {
+      icon: ImageIcon,
+      label: "Manage Artworks",
+      href: "/dashboard/admin/artworks",
+    },
+    {
+      icon: ReceiptIcon,
+      label: "View Transactions",
+      href: "/dashboard/admin/transactions",
+    },
+  ];
+
+  const artistNavItems = [
     { icon: GridIcon, label: "Dashboard", href: "/dashboard/artist" },
     {
       icon: ImageIcon,
@@ -214,8 +248,35 @@ export function DashboardSideBar() {
     },
   ];
 
+  const userNavItems = [
+    { icon: ReceiptIcon, label: "Purchase History", href: "/dashboard/user" },
+    {
+      icon: ImageIcon,
+      label: "Bought Artworks",
+      href: "/dashboard/user/artworks",
+    },
+    {
+      icon: SettingsIcon,
+      label: "Profile Management",
+      href: "/dashboard/user/profile",
+    },
+  ];
+
+  let navItems = userNavItems;
+  if (userRole === "admin") {
+    navItems = adminNavItems;
+  } else if (userRole === "artist") {
+    navItems = artistNavItems;
+  }
+
   const isActive = (href) => {
-    if (href === "/dashboard/artist") return pathname === href;
+    if (
+      href === "/dashboard/artist" ||
+      href === "/dashboard/admin" ||
+      href === "/dashboard/user"
+    ) {
+      return pathname === href;
+    }
     return pathname?.startsWith(href);
   };
 

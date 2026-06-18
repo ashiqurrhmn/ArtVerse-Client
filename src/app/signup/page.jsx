@@ -160,7 +160,7 @@ export default function SignUpPage() {
                     Select role
                   </option>
                   <option value="buyer">Buyer</option>
-                  <option value="seller">Artist</option>
+                  <option value="artist">Artist</option>
                 </select>
               </div>
 

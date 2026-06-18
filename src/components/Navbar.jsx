@@ -14,12 +14,12 @@ import { ThemeSwitcher } from "./ThemeSwitcher";
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { data: session } = authClient.useSession();
 
   if(pathname.includes('/dashboard')){
     return null;
   }
 
-  const { data: session } = authClient.useSession();
   const user = session?.user;
 
 
@@ -136,17 +136,17 @@ const Navbar = () => {
                     onAction={(key) => console.log(`Selected: ${key}`)}
                   >
                     <Dropdown.Item key="dashboard" textValue="Dashboard">
-                      <div className="flex items-center gap-2">
+                      <Link href={`/dashboard/${user?.role}`} className="flex items-center gap-2">
                         <MdDashboard />
                         <Label>Dashboard</Label>
-                      </div>
+                      </Link>
                     </Dropdown.Item>
 
                     <Dropdown.Item key="profile" textValue="Profile">
-                      <div className="flex items-center gap-2">
+                      <Link href={`/dashboard/profile`} className="flex items-center gap-2">
                         <CgProfile />
                         <Label>Profile</Label>
-                      </div>
+                      </Link>
                     </Dropdown.Item>
 
                     <Dropdown.Item
@@ -176,7 +176,7 @@ const Navbar = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard" className={`block py-2 font-medium ${pathname.startsWith('/dashboard') ? 'text-navlight dark:text-primary underline underline-offset-4 decoration-2' : 'text-foreground hover:text-navlight dark:hover:text-primary'}`}>
+                <Link href={`/dashboard/${user?.role}`} className={`block py-2 font-medium ${pathname.startsWith('/dashboard') ? 'text-navlight dark:text-primary underline underline-offset-4 decoration-2' : 'text-foreground hover:text-navlight dark:hover:text-primary'}`}>
                   Dashboard
                 </Link>
               </li>
