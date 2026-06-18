@@ -10,119 +10,110 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-const stats = [
-  {
-    icon: FileImage,
-    label: "Total Artworks",
-    value: "48",
-    trend: "+12% this month",
-    trendUp: true,
-  },
-  {
-    icon: Users,
-    label: "Total Followers",
-    value: "1,284",
-    trend: "+5% this month",
-    trendUp: true,
-  },
-  {
-    icon: Zap,
-    label: "Active Auctions",
-    value: "18",
-    trend: "-2% this month",
-    trendUp: false,
-  },
-  {
-    icon: CheckCircle2,
-    label: "Artworks Sold",
-    value: "32",
-    trend: "+18% this month",
-    trendUp: true,
-  },
-];
-
-const recentArtworks = [
-  {
-    id: 1,
-    name: "Abstract Harmony",
-    category: "Painting",
-    date: "Jun 14, 2026",
-    price: "$1,200",
-    status: "Selling",
-    statusClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-  },
-  {
-    id: 2,
-    name: "Urban Echoes",
-    category: "Photography",
-    date: "Jun 11, 2026",
-    price: "$800",
-    status: "New",
-    statusClass: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-  },
-  {
-    id: 3,
-    name: "Neon Dreams",
-    category: "Digital Art",
-    date: "Jun 8, 2026",
-    price: "$450",
-    status: "Reviewing",
-    statusClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-  },
-  {
-    id: 4,
-    name: "Silent Forest",
-    category: "Sculpture",
-    date: "Jun 2, 2026",
-    price: "$2,100",
-    status: "Draft",
-    statusClass: "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
-  },
-];
-
-const topArtworks = [
-  {
-    id: 101,
-    name: "Starry Night Resonance",
-    category: "Painting",
-    sales: 12,
-    revenue: "$15,000",
-    image: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=150&h=150&fit=crop",
-  },
-  {
-    id: 102,
-    name: "Ethereal Light",
-    category: "Digital Art",
-    sales: 8,
-    revenue: "$14,000",
-    image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=150&h=150&fit=crop",
-  },
-  {
-    id: 103,
-    name: "Ocean Whisper",
-    category: "Painting",
-    sales: 5,
-    revenue: "$16,000",
-    image: "https://images.unsplash.com/photo-1505909182942-e2f09aee3e89?w=150&h=150&fit=crop",
-  },
-  {
-    id: 104,
-    name: "Concrete Jungle",
-    category: "Photography",
-    sales: 15,
-    revenue: "$9,000",
-    image: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=150&h=150&fit=crop",
-  },
-];
+import { useState, useEffect } from "react";
+import { authClient } from "@/lib/auth-client";
+import { useProfile } from "@/context/ProfileContext";
+import { getArtworks } from "@/lib/api/artworks";
 
 export default function ArtistDashboard() {
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
+  const user = session?.user;
+  const { profile } = useProfile();
+  
+  const [artworks, setArtworks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user?.email) {
+      getArtworks(user.email).then(data => {
+        setArtworks(data || []);
+        setLoading(false);
+      }).catch(err => {
+        console.error("Failed to load artworks", err);
+        setLoading(false);
+      });
+    }
+  }, [user?.email]);
+
+  const userName = profile?.name || user?.name || "Artist";
+
+  // Dynamic Stats Calculation
+  const activeAuctions = artworks.filter(a => a.status?.toLowerCase() === "selling" || a.status?.toLowerCase() === "reviewing").length;
+  
+  const stats = [
+    {
+      icon: FileImage,
+      label: "Total Artworks",
+      value: artworks.length.toString(),
+      trend: "All time",
+      trendUp: true,
+    },
+    {
+      icon: Users,
+      label: "Total Followers",
+      value: (profile?.followers?.length || 0).toString(),
+      trend: "All time",
+      trendUp: true,
+    },
+    {
+      icon: Zap,
+      label: "Active Auctions",
+      value: activeAuctions.toString(),
+      trend: "Current",
+      trendUp: true,
+    },
+    {
+      icon: CheckCircle2,
+      label: "Artworks Sold",
+      value: (profile?.itemsSold || 0).toString(),
+      trend: "All time",
+      trendUp: true,
+    },
+  ];
+
+  // Map to recent artworks
+  const recentArtworks = artworks.slice(0, 4).map(a => ({
+    id: a._id,
+    name: a.title,
+    category: a.category,
+    date: a.date,
+    price: `$${a.price}`,
+    status: a.status || "Draft",
+    statusClass: (a.status?.toLowerCase() === "selling" || a.status?.toLowerCase() === "approved") 
+      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
+      : (a.status?.toLowerCase() === "reviewing")
+      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+      : "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
+  }));
+
+  // Map to top artworks (placeholder using most expensive/recent)
+  const topArtworks = [...artworks].sort((a, b) => Number(b.price) - Number(a.price)).slice(0, 4).map(a => ({
+    id: a._id,
+    name: a.title,
+    category: a.category,
+    sales: 0,
+    revenue: `$${a.price}`,
+    image: a.image,
+  }));
+
+  if (sessionLoading || loading) {
+    return (
+      <div className="flex h-full min-h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="size-12 animate-spin rounded-full border-4 border-primary/20 border-t-primary"></div>
+          <p className="text-sm text-muted-foreground animate-pulse">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-full text-foreground px-4 md:px-10 pb-16">
       
       {/* ── Page Header ── */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
-          Welcome back, Alex Sterling
+          Welcome back, {userName}
         </h1>
         <p className="mt-2 text-base text-muted-foreground max-w-xl">
           Here's what's happening with your art business today.
@@ -155,9 +146,17 @@ export default function ArtistDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-separator/60">
-                  {recentArtworks.map((artwork) => (
-                    <ArtworkRow key={artwork.id} {...artwork} />
-                  ))}
+                  {recentArtworks.length > 0 ? (
+                    recentArtworks.map((artwork) => (
+                      <ArtworkRow key={artwork.id} {...artwork} />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="text-center py-8 text-muted-foreground">
+                        No artworks found.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -166,12 +165,18 @@ export default function ArtistDashboard() {
 
         {/* Right: Top Artworks */}
         <div className="rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6 shadow-xl shadow-black/5 dark:shadow-none flex flex-col">
-          <SectionHeader title="Top Artworks" action="View sales" href="/dashboard/artist/artworks/sales" />
+          <SectionHeader title="Top Artworks" action="View sales" href="/dashboard/artist/sales" />
           
           <div className="mt-4 flex flex-col gap-3 flex-1">
-            {topArtworks.map((art, index) => (
-              <TopArtworkRow key={art.id} index={index + 1} {...art} />
-            ))}
+            {topArtworks.length > 0 ? (
+              topArtworks.map((art, index) => (
+                <TopArtworkRow key={art.id} index={index + 1} {...art} />
+              ))
+            ) : (
+              <div className="flex flex-1 items-center justify-center text-muted-foreground text-sm py-8 border border-dashed border-separator rounded-xl">
+                No artworks to display.
+              </div>
+            )}
           </div>
         </div>
 
