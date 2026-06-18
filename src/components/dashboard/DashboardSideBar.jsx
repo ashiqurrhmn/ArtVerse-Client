@@ -164,8 +164,8 @@ export function DashboardSideBar() {
   const isAuthenticated = !isPending && Boolean(user);
   let userRole = user?.role || "buyer";
   if (userRole === "seller") userRole = "artist";
-  const userName = user?.name || user?.email || "User";
   const { profile } = useProfile();
+  const userName = profile?.name || user?.name || user?.email || "User";
   const userImage = profile?.profileImage || user?.image;
   const userPlan = user?.plan || "free";
   const normalizedPlan = userPlan.toLowerCase();

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { useProfile } from "@/context/ProfileContext";
+import { Button } from "@heroui/react";
 import {
   Camera,
   MapPin,
@@ -44,6 +45,18 @@ export default function ArtistProfilePage() {
   const avatarInputRef = useRef(null);
   const coverInputRef = useRef(null);
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    bio: "",
+    about: "",
+    location: "",
+    website: "",
+    twitter: "",
+    instagram: "",
+  });
+
   // Fetch profile from DB
   useEffect(() => {
     if (!user?.email) return;
@@ -52,6 +65,15 @@ export default function ArtistProfilePage() {
         const res = await fetch(`${BASE_URL}/api/profiles/${user.email}`);
         const data = await res.json();
         setProfile(data);
+        setFormData({
+          name: data.name || user.name || "",
+          bio: data.bio || "",
+          about: data.about || "",
+          location: data.location || "",
+          website: data.website || "",
+          twitter: data.twitter || "",
+          instagram: data.instagram || "",
+        });
       } catch {
         console.error("Failed to load profile");
       } finally {
@@ -75,6 +97,17 @@ export default function ArtistProfilePage() {
       }
     } catch {
       return false;
+    }
+  };
+
+  const handleSaveProfileDetails = async () => {
+    const saved = await saveProfile(formData);
+    if (saved) {
+      toast.success("Profile details updated!");
+      refreshProfile();
+      setIsModalOpen(false);
+    } else {
+      toast.error("Failed to save profile details");
     }
   };
 
@@ -129,7 +162,7 @@ export default function ArtistProfilePage() {
     );
   }
 
-  const userName = user?.name || "Artist Name";
+  const userName = profile?.name || user?.name || "Artist Name";
   const userEmail = user?.email || "artist@example.com";
   const userInitials = userName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
   const profileImage = profile?.profileImage || user?.image;
@@ -154,7 +187,121 @@ export default function ArtistProfilePage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Artist Profile</h1>
           <p className="text-muted-foreground mt-1">Manage your public persona and view your stats.</p>
         </div>
+        <Button 
+          onPress={() => setIsModalOpen(true)}
+          className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5"
+        >
+          Edit Profile
+        </Button>
       </div>
+
+      {/* Custom Edit Profile Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div 
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsModalOpen(false)} 
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-background border border-separator/60 shadow-2xl p-6 z-10 max-h-[90vh] overflow-y-auto"
+          >
+            <h2 className="text-xl font-bold text-foreground mb-6 border-b border-separator/30 pb-4">Edit Profile Details</h2>
+            
+            <div className="space-y-6">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Display Name</label>
+                <input 
+                  type="text"
+                  placeholder="E.g. Alex Sterling" 
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full rounded-xl border border-separator/60 bg-transparent px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Short Bio</label>
+                <input 
+                  type="text"
+                  placeholder="E.g. Digital artist exploring nature and tech" 
+                  value={formData.bio}
+                  onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                  className="w-full rounded-xl border border-separator/60 bg-transparent px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">About (Detailed)</label>
+                <textarea 
+                  placeholder="Tell your story..." 
+                  value={formData.about}
+                  onChange={(e) => setFormData({...formData, about: e.target.value})}
+                  rows={4}
+                  className="w-full rounded-xl border border-separator/60 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors resize-y"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">Location</label>
+                  <input 
+                    type="text"
+                    placeholder="E.g. San Francisco, CA" 
+                    value={formData.location}
+                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                    className="w-full rounded-xl border border-separator/60 bg-transparent px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+                  />
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">Website</label>
+                  <input 
+                    type="text"
+                    placeholder="E.g. artverse.com/artist/alex" 
+                    value={formData.website}
+                    onChange={(e) => setFormData({...formData, website: e.target.value})}
+                    className="w-full rounded-xl border border-separator/60 bg-transparent px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+                  />
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">Twitter (X) Username</label>
+                  <input 
+                    type="text"
+                    placeholder="E.g. @alex_arts" 
+                    value={formData.twitter}
+                    onChange={(e) => setFormData({...formData, twitter: e.target.value})}
+                    className="w-full rounded-xl border border-separator/60 bg-transparent px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+                  />
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">Instagram Username</label>
+                  <input 
+                    type="text"
+                    placeholder="E.g. @alex.sterling" 
+                    value={formData.instagram}
+                    onChange={(e) => setFormData({...formData, instagram: e.target.value})}
+                    className="w-full rounded-xl border border-separator/60 bg-transparent px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 flex justify-end gap-3 border-t border-separator/30 pt-4">
+              <Button variant="light" onPress={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button className="bg-primary text-primary-foreground" onPress={handleSaveProfileDetails}>
+                Save Changes
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Profile Info */}
@@ -232,15 +379,48 @@ export default function ArtistProfilePage() {
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <LinkIcon className="size-4 mr-3" />
-                  <a href="#" className="hover:text-primary transition-colors">{profile?.website || "No website"}</a>
+                  {profile?.website ? (
+                    <a 
+                      href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="hover:text-primary transition-colors truncate"
+                    >
+                      {profile.website}
+                    </a>
+                  ) : (
+                    <span>No website</span>
+                  )}
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <span className="size-4 mr-3 font-bold">X</span>
-                  <a href="#" className="hover:text-primary transition-colors">{profile?.twitter || "Not set"}</a>
+                  {profile?.twitter ? (
+                    <a 
+                      href={`https://twitter.com/${profile.twitter.replace(/^@/, '')}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="hover:text-primary transition-colors truncate"
+                    >
+                      {profile.twitter}
+                    </a>
+                  ) : (
+                    <span>Not set</span>
+                  )}
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <span className="size-4 mr-3 font-bold">IG</span>
-                  <a href="#" className="hover:text-primary transition-colors">{profile?.instagram || "Not set"}</a>
+                  {profile?.instagram ? (
+                    <a 
+                      href={`https://instagram.com/${profile.instagram.replace(/^@/, '')}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="hover:text-primary transition-colors truncate"
+                    >
+                      {profile.instagram}
+                    </a>
+                  ) : (
+                    <span>Not set</span>
+                  )}
                 </div>
               </div>
             </div>

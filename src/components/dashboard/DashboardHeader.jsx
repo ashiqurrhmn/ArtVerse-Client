@@ -7,8 +7,8 @@ import { useProfile } from "@/context/ProfileContext";
 export default function DashboardHeader() {
   const { data: session, isPending } = useSession();
   const user = session?.user;
-  const userName = user?.name || user?.email || "User";
   const { profile } = useProfile();
+  const userName = profile?.name || user?.name || user?.email || "User";
   const userImage = profile?.profileImage || user?.image;
   let userRole = user?.role || "buyer";
   if (userRole === "seller") userRole = "artist";

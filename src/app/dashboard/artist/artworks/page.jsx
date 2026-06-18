@@ -14,8 +14,11 @@ import Link from "next/link";
 import { getArtworks } from "@/lib/api/artworks";
 import { deleteArtwork } from "@/lib/actions/artworks";
 import toast from "react-hot-toast";
+import { authClient } from "@/lib/auth-client";
 
 export default function ManageArtworksPage() {
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
   const [artworks, setArtworks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,10 +41,12 @@ export default function ManageArtworksPage() {
     fetchArtworks();
   }, []);
 
+  // Filter by search term AND by current user email
   let filteredArtworks = artworks.filter(
     (artwork) =>
-      artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      artwork.category.toLowerCase().includes(searchTerm.toLowerCase()),
+      artwork.email === user?.email &&
+      (artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       artwork.category.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   if (sortOption === "price-asc") {
@@ -54,8 +59,8 @@ export default function ManageArtworksPage() {
     filteredArtworks.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
   }
 
-  const totalArtworks = artworks.length;
-  const publishedCount = artworks.filter(
+  const totalArtworks = filteredArtworks.length;
+  const publishedCount = filteredArtworks.filter(
     (a) => a.status === "Published",
   ).length;
 
