@@ -13,3 +13,4 @@ export const addArtwork = async (newArtwork) => {
     const data = await res.json();
     return data;
 }
+

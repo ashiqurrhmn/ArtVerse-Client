@@ -1,24 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Filter, Download, Plus, Pencil, Trash2, ImageIcon } from "lucide-react";
 import Link from "next/link";
-
-const initialArtworks = [
-  { id: 1, title: "Abstract Harmony", category: "Painting",    price: "$1,200", status: "Published", date: "Jun 14, 2026" },
-  { id: 2, title: "Urban Echoes",     category: "Photography", price: "$800",   status: "Published", date: "Jun 11, 2026" },
-  { id: 3, title: "Neon Dreams",      category: "Digital Art", price: "$450",   status: "Draft",     date: "Jun 8, 2026"  },
-  { id: 4, title: "Silent Forest",    category: "Sculpture",   price: "$2,100", status: "Published", date: "Jun 2, 2026"  },
-  { id: 5, title: "Crimson Tide",     category: "Painting",    price: "$950",   status: "Reviewing", date: "May 28, 2026" },
-  { id: 6, title: "Ethereal Light",   category: "Digital Art", price: "$1,750", status: "Published", date: "May 20, 2026" },
-  { id: 7, title: "Concrete Jungle",  category: "Photography", price: "$600",   status: "Draft",     date: "May 15, 2026" },
-  { id: 8, title: "Ocean Whisper",    category: "Painting",    price: "$3,200", status: "Published", date: "May 10, 2026" },
-];
+import { getArtworks } from "@/lib/api/artworks";
 
 export default function ManageArtworksPage() {
-  const [artworks, setArtworks] = useState(initialArtworks);
+  const [artworks, setArtworks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteId, setDeleteId] = useState(null);
+
+  useEffect(() => {
+    const fetchArtworks = async () => {
+      try {
+        const data = await getArtworks();
+        setArtworks(data || []);
+      } catch (error) {
+        console.error("Failed to fetch artworks", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchArtworks();
+  }, []);
 
   const filteredArtworks = artworks.filter(
     (artwork) =>
@@ -30,7 +35,7 @@ export default function ManageArtworksPage() {
   const publishedCount = artworks.filter(a => a.status === "Published").length;
 
   const handleDelete = (id) => {
-    setArtworks((prev) => prev.filter((a) => a.id !== id));
+    setArtworks((prev) => prev.filter((a) => a._id !== id));
     setDeleteId(null);
   };
 
@@ -138,13 +143,50 @@ export default function ManageArtworksPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-separator/60">
-                {filteredArtworks.length > 0 ? (
-                  filteredArtworks.map((artwork) => (
-                    <tr key={artwork.id} className="transition-colors hover:bg-accent/30 dark:hover:bg-accent/20 group">
+                {isLoading ? (
+                  [...Array(5)].map((_, i) => (
+                    <tr key={i} className="animate-pulse border-b border-separator/60 last:border-0">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-separator bg-muted/40 text-muted-foreground">
-                            <ImageIcon className="size-4" />
+                          <div className="size-10 rounded-xl bg-muted/40 shrink-0"></div>
+                          <div className="space-y-2 w-full">
+                            <div className="h-3.5 w-32 rounded-md bg-muted/40"></div>
+                            <div className="h-2.5 w-20 rounded-md bg-muted/40"></div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-3.5 w-24 rounded-md bg-muted/40"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-3.5 w-16 rounded-md bg-muted/40"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-6 w-20 rounded-full bg-muted/40"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-3.5 w-24 rounded-md bg-muted/40"></div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <div className="size-8 rounded-lg bg-muted/40"></div>
+                          <div className="size-8 rounded-lg bg-muted/40"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : filteredArtworks.length > 0 ? (
+                  filteredArtworks.map((artwork) => (
+                    <tr key={artwork._id} className="transition-colors hover:bg-accent/30 dark:hover:bg-accent/20 group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-separator bg-muted/40 text-muted-foreground overflow-hidden">
+                            {artwork.image ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={artwork.image} alt={artwork.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <ImageIcon className="size-4" />
+                            )}
                           </div>
                           <div>
                             <p className="font-semibold text-foreground">{artwork.title}</p>
@@ -153,27 +195,27 @@ export default function ManageArtworksPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-muted-foreground">{artwork.category}</td>
-                      <td className="px-6 py-4 font-bold text-foreground">{artwork.price}</td>
+                      <td className="px-6 py-4 font-bold text-foreground">${artwork.price}</td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider border ${getStatusBadge(artwork.status)}`}>
                           {artwork.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground">{artwork.date}</td>
+                      <td className="px-6 py-4 text-muted-foreground">{artwork.date || "Just now"}</td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Link
-                            href={`/dashboard/artist/artworks/edit?id=${artwork.id}`}
+                            href={`/dashboard/artist/artworks/edit?id=${artwork._id}`}
                             className="inline-flex size-8 items-center justify-center rounded-lg border border-separator text-muted-foreground transition-all hover:border-primary hover:bg-primary/10 hover:text-primary"
                             title="Edit artwork"
                           >
                             <Pencil className="size-3.5" />
                           </Link>
 
-                          {deleteId === artwork.id ? (
+                          {deleteId === artwork._id ? (
                             <div className="flex items-center gap-1">
                               <button
-                                onClick={() => handleDelete(artwork.id)}
+                                onClick={() => handleDelete(artwork._id)}
                                 className="inline-flex h-8 items-center gap-1 rounded-lg bg-red-500/15 px-2.5 text-[11px] font-semibold text-red-600 transition hover:bg-red-500/25 dark:text-red-400"
                                 type="button"
                               >
@@ -189,7 +231,7 @@ export default function ManageArtworksPage() {
                             </div>
                           ) : (
                             <button
-                              onClick={() => setDeleteId(artwork.id)}
+                              onClick={() => setDeleteId(artwork._id)}
                               className="inline-flex size-8 items-center justify-center rounded-lg border border-separator text-muted-foreground transition-all hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
                               type="button"
                               title="Delete artwork"
