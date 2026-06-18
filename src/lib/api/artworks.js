@@ -14,10 +14,3 @@ export const getArtworkById = async (id) => {
   return data;
 };
 
-export const deleteArtwork = async (id) => {
-  const res = await fetch(`${baseUrl}/api/artworks/${id}`, {
-    method: "DELETE",
-  });
-  const data = await res.json();
-  return data;
-};

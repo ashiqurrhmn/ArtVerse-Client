@@ -11,7 +11,8 @@ import {
   ImageIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { getArtworks, deleteArtwork } from "@/lib/api/artworks";
+import { getArtworks } from "@/lib/api/artworks";
+import { deleteArtwork } from "@/lib/actions/artworks";
 import toast from "react-hot-toast";
 
 export default function ManageArtworksPage() {
@@ -302,7 +303,7 @@ export default function ManageArtworksPage() {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Link
-                            href={`/dashboard/artist/artworks/edit?id=${artwork._id}`}
+                            href={`/dashboard/artist/artworks/edit/${artwork._id}`}
                             className="inline-flex size-8 items-center justify-center rounded-lg border border-separator text-muted-foreground transition-all hover:border-primary hover:bg-primary/10 hover:text-primary"
                             title="Edit artwork"
                           >

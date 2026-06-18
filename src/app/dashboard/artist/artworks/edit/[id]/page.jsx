@@ -1,0 +1,355 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { UploadCloud, ArrowLeft, ImageIcon, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { useRouter, useParams } from "next/navigation";
+import toast from "react-hot-toast";
+import { getArtworkById } from "@/lib/api/artworks";
+import { updateArtwork } from "@/lib/actions/artworks";
+
+const categories = [
+  { key: "painting", label: "Painting" },
+  { key: "photography", label: "Photography" },
+  { key: "digital", label: "Digital Art" },
+  { key: "sculpture", label: "Sculpture" },
+  { key: "mixed", label: "Mixed Media" },
+];
+
+export default function EditArtworkPage() {
+  const router = useRouter();
+  const params = useParams();
+  const id = params?.id;
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
+  const [artwork, setArtwork] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    const fetchArtwork = async () => {
+      if (!id) return;
+      try {
+        const data = await getArtworkById(id);
+        if (data) {
+          setArtwork(data);
+          setImagePreview(data.image);
+        }
+      } catch (error) {
+        console.error("Failed to fetch artwork:", error);
+        toast.error("Failed to load artwork data");
+      } finally {
+        setIsFetching(false);
+      }
+    };
+    fetchArtwork();
+  }, [id]);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+    
+    let imageUrl = artwork?.image || "";
+
+    if (imageFile) {
+      const imgbbFormData = new FormData();
+      imgbbFormData.append("image", imageFile);
+
+      try {
+        const imgbbApiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+        const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+          method: "POST",
+          body: imgbbFormData,
+        });
+        const imgbbData = await imgbbRes.json();
+        
+        if (imgbbData.success) {
+          imageUrl = imgbbData.data.display_url;
+        } else {
+          toast.error("Failed to upload image");
+          setIsLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.error("Image upload error:", error);
+        toast.error("Error uploading image");
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    const artworkData = {
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        price: data.price,
+        image: imageUrl,
+    };
+
+    try {
+      const res = await updateArtwork(id, artworkData);
+
+      if (res.modifiedCount > 0 || res.matchedCount > 0) {
+        toast.success("Artwork updated successfully");
+        router.push("/dashboard/artist/artworks");
+      } else {
+        toast.error("Failed to update artwork");
+      }
+    } catch (error) {
+      console.error("Failed to update artwork:", error);
+      toast.error("Failed to update artwork");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isFetching) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground font-semibold">Loading artwork details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!artwork) {
+    return (
+      <div className="flex h-[60vh] flex-col items-center justify-center gap-4 text-center">
+        <ImageIcon className="size-16 text-muted-foreground/30" />
+        <h2 className="text-xl font-bold text-foreground">Artwork Not Found</h2>
+        <p className="text-muted-foreground">The artwork you are trying to edit does not exist.</p>
+        <Link href="/dashboard/artist/artworks" className="mt-4 text-primary hover:underline font-semibold">
+          Return to Artworks
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-full text-foreground px-10 pb-16">
+      {/* Header */}
+      <div className="mb-8">
+        <Link
+          href="/dashboard/artist/artworks"
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary mb-5"
+        >
+          <ArrowLeft className="size-4" />
+          Back to Artworks
+        </Link>
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
+          Edit Artwork
+        </h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          Update the details for your artwork.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
+        {/* ── LEFT COLUMN ── */}
+        <div className="space-y-8">
+          {/* Artwork Details Card */}
+          <section className="rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6 shadow-xl shadow-black/5 dark:shadow-none">
+            <h2 className="text-base font-semibold mb-5 flex items-center gap-2">
+              <Sparkles className="size-4 text-primary" />
+              Artwork Details
+            </h2>
+
+            <div className="space-y-5">
+              {/* Title */}
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="title" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="title"
+                  name="title"
+                  type="text"
+                  required
+                  defaultValue={artwork.title}
+                  placeholder="e.g. Starry Night Resonance"
+                  className="w-full rounded-xl border border-separator bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              {/* Description */}
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="description" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  Description <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  required
+                  rows={5}
+                  defaultValue={artwork.description}
+                  placeholder="What inspired this piece? Describe the technique, meaning, and emotion behind your artwork..."
+                  className="w-full rounded-xl border border-separator bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 resize-y min-h-[120px]"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Classification & Pricing Card */}
+          <section className="rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6 shadow-xl shadow-black/5 dark:shadow-none">
+            <h2 className="text-base font-semibold mb-5">Classification & Pricing</h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {/* Category */}
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="category" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  Category <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    id="category"
+                    name="category"
+                    required
+                    defaultValue={artwork.category}
+                    className="w-full rounded-xl border border-separator bg-background px-4 py-3 text-sm text-foreground outline-none transition-colors appearance-none cursor-pointer focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="" disabled>Select a category</option>
+                    {categories.map((cat) => (
+                      <option key={cat.key} value={cat.key}>{cat.label}</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Price */}
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="price" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  Price (USD) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">$</span>
+                  <input
+                    id="price"
+                    name="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    required
+                    defaultValue={artwork.price}
+                    placeholder="0.00"
+                    className="w-full rounded-xl border border-separator bg-background pl-8 pr-4 py-3 text-sm font-semibold text-foreground placeholder:text-muted-foreground/50 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* ── RIGHT COLUMN ── */}
+        <div className="lg:sticky lg:top-6 space-y-6">
+          {/* Image Upload Card */}
+          <section className="rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6 shadow-xl shadow-black/5 dark:shadow-none">
+            <h2 className="text-base font-semibold mb-5 flex items-center gap-2">
+              <ImageIcon className="size-4 text-primary" />
+              Upload Image
+            </h2>
+
+            <div
+              className={`relative flex min-h-[280px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all duration-200 overflow-hidden group
+                ${isDragging
+                  ? "border-primary bg-primary/5 scale-[1.01]"
+                  : "border-separator bg-background hover:border-primary/40 hover:bg-accent/20"
+                }`}
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="absolute inset-0 z-20 h-full w-full cursor-pointer opacity-0"
+              />
+
+              {imagePreview ? (
+                <div className="absolute inset-0 z-10">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white text-sm font-semibold bg-black/50 px-4 py-2 rounded-full flex items-center gap-2">
+                      <UploadCloud className="size-4" />
+                      Change Image
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-3 p-6 text-center pointer-events-none">
+                  <div className={`rounded-full p-3.5 transition-colors duration-200 ${isDragging ? "bg-primary/15 text-primary" : "bg-muted/50 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10"}`}>
+                    <UploadCloud className="size-6" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground text-sm">Drag & drop your image</p>
+                    <p className="text-xs text-muted-foreground mt-1">or click to browse</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-2">JPG, PNG, WEBP — Max 10MB</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-3">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+            >
+              {isLoading ? (
+                <span className="inline-block size-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              ) : (
+                "Save Changes"
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push("/dashboard/artist/artworks")}
+              className="w-full rounded-xl border border-separator bg-background px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent/40"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}
