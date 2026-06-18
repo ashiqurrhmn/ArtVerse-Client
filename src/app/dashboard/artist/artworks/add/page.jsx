@@ -4,6 +4,8 @@ import { useState } from "react";
 import { UploadCloud, ArrowLeft, ImageIcon, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { addArtwork } from "@/lib/actions/artworks";
 
 const categories = [
   { key: "painting", label: "Painting" },
@@ -17,11 +19,13 @@ export default function AddArtworkPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => setImagePreview(reader.result);
       reader.readAsDataURL(file);
@@ -33,6 +37,7 @@ export default function AddArtworkPage() {
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
     if (file && file.type.startsWith("image/")) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => setImagePreview(reader.result);
       reader.readAsDataURL(file);
@@ -45,15 +50,64 @@ export default function AddArtworkPage() {
     
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
-    console.log("Submitted Artwork Data:", data);
-    if (imagePreview) {
-        console.log("Image Data (Base64 length):", imagePreview.length);
+    
+    let imageUrl = "";
+
+    if (imageFile) {
+      const imgbbFormData = new FormData();
+      imgbbFormData.append("image", imageFile);
+
+      try {
+        const imgbbApiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+        const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+          method: "POST",
+          body: imgbbFormData,
+        });
+        const imgbbData = await imgbbRes.json();
+        
+        if (imgbbData.success) {
+          imageUrl = imgbbData.data.display_url;
+        } else {
+          toast.error("Failed to upload image");
+          setIsLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.error("Image upload error:", error);
+        toast.error("Error uploading image");
+        setIsLoading(false);
+        return;
+      }
+    } else {
+      toast.error("Please select an image");
+      setIsLoading(false);
+      return;
     }
 
-    setTimeout(() => {
+    const artworkData = {
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        price: data.price,
+        image: imageUrl,
+        status: "reviewing"
+    };
+
+    try {
+      const res = await addArtwork(artworkData);
+
+      if (res.insertedId) {
+        toast.success("Artwork added successfully");
+        router.push("/dashboard/artist/artworks");
+      } else {
+        toast.error("Failed to add artwork");
+      }
+    } catch (error) {
+      console.error("Failed to add artwork:", error);
+      toast.error("Failed to add artwork");
+    } finally {
       setIsLoading(false);
-      router.push("/dashboard/artist/artworks");
-    }, 1500);
+    }
   };
 
 

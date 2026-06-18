@@ -234,7 +234,7 @@ export function DashboardSideBar() {
     {
       icon: ReceiptIcon,
       label: "Sales History",
-      href: "/dashboard/artist/artworks/sales",
+      href: "/dashboard/artist/sales",
     },
     {
       icon: SettingsIcon,
