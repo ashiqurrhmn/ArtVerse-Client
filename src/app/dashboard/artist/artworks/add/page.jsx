@@ -42,11 +42,20 @@ export default function AddArtworkPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+    console.log("Submitted Artwork Data:", data);
+    if (imagePreview) {
+        console.log("Image Data (Base64 length):", imagePreview.length);
+    }
+
     setTimeout(() => {
       setIsLoading(false);
       router.push("/dashboard/artist/artworks");
     }, 1500);
   };
+
 
   return (
     <div className="min-h-full text-foreground px-10 pb-16">

@@ -232,14 +232,9 @@ export function DashboardSideBar() {
       href: "/dashboard/artist/artworks/add",
     },
     {
-      icon: EditIcon,
-      label: "Edit Artwork",
-      href: "/dashboard/artist/artworks/edit",
-    },
-    {
       icon: ReceiptIcon,
       label: "Sales History",
-      href: "/dashboard/artist/sales",
+      href: "/dashboard/artist/artworks/sales",
     },
     {
       icon: SettingsIcon,
