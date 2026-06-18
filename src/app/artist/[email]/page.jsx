@@ -7,6 +7,9 @@ import { MapPin, Link as LinkIcon, Eye, Leaf, Palette, ShoppingBag } from "lucid
 import Link from "next/link";
 import { getArtworks } from "@/lib/api/artworks";
 import ArtworkCard from "@/components/ArtworkCard";
+import { authClient } from "@/lib/auth-client";
+import { useProfile } from "@/context/ProfileContext";
+import toast from "react-hot-toast";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
 
@@ -17,6 +20,11 @@ export default function PublicArtistProfilePage() {
   const [profile, setProfile] = useState(null);
   const [artworks, setArtworks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFollowingToggle, setIsFollowingToggle] = useState(false);
+
+  const { data: session } = authClient.useSession();
+  const currentUser = session?.user;
+  const { profile: loggedInProfile } = useProfile();
 
   useEffect(() => {
     if (!email) return;
@@ -45,6 +53,61 @@ export default function PublicArtistProfilePage() {
 
     fetchArtistData();
   }, [email]);
+
+  const handleFollowToggle = async () => {
+    if (!currentUser) {
+      toast.error("Please login to follow artists");
+      return;
+    }
+    
+    setIsFollowingToggle(true);
+    
+    const followerName = loggedInProfile?.name || currentUser.name;
+    const followerImage = loggedInProfile?.profileImage || currentUser.image || "";
+    const followerRole = currentUser.role || "user";
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/profiles/${email}/follow`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: currentUser.email,
+          name: followerName,
+          image: followerImage,
+          role: followerRole
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to toggle follow");
+
+      const data = await res.json();
+      
+      // Update local profile state
+      setProfile((prev) => {
+        const currentFollowers = prev.followers || [];
+        if (data.isFollowing) {
+          return {
+            ...prev,
+            followers: [...currentFollowers, { email: currentUser.email, name: followerName, image: followerImage, role: followerRole }]
+          };
+        } else {
+          return {
+            ...prev,
+            followers: currentFollowers.filter(f => f.email !== currentUser.email)
+          };
+        }
+      });
+      
+      toast.success(data.isFollowing ? "Followed artist!" : "Unfollowed artist");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to perform action");
+    } finally {
+      setIsFollowingToggle(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -120,9 +183,31 @@ export default function PublicArtistProfilePage() {
                   </span>
                 </div>
 
+                {currentUser && currentUser.email !== email && (
+                  <button
+                    onClick={handleFollowToggle}
+                    disabled={isFollowingToggle}
+                    className={`mt-4 w-full max-w-[200px] rounded-full px-6 py-2 text-sm font-semibold transition-all ${
+                      profile?.followers?.some(f => f.email === currentUser.email)
+                        ? "bg-muted text-foreground border border-separator hover:bg-muted/80"
+                        : "bg-primary text-primary-foreground hover:opacity-90"
+                    } disabled:opacity-50`}
+                  >
+                    {isFollowingToggle ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                      </span>
+                    ) : profile?.followers?.some(f => f.email === currentUser.email) ? (
+                      "Following"
+                    ) : (
+                      "Follow"
+                    )}
+                  </button>
+                )}
+
                 <div className="mt-6 flex justify-center gap-8 border-y border-separator/60 py-5 w-full">
                   <div className="text-center">
-                    <p className="text-xl font-bold text-foreground">{profile?.followers || 0}</p>
+                    <p className="text-xl font-bold text-foreground">{profile?.followers?.length || 0}</p>
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1">Followers</p>
                   </div>
                   <div className="w-px bg-separator/60"></div>

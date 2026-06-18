@@ -3,8 +3,10 @@
 import { authClient } from "@/lib/auth-client";
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useProfile } from "@/context/ProfileContext";
+import { getArtworks } from "@/lib/api/artworks";
 import { Button } from "@heroui/react";
 import {
   Camera,
@@ -36,9 +38,11 @@ async function uploadToImgbb(file) {
 export default function ArtistProfilePage() {
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
+  const router = useRouter();
   const { refreshProfile } = useProfile();
 
   const [profile, setProfile] = useState(null);
+  const [artworksCount, setArtworksCount] = useState(0);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -47,6 +51,7 @@ export default function ArtistProfilePage() {
   const coverInputRef = useRef(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -63,9 +68,15 @@ export default function ArtistProfilePage() {
     if (!user?.email) return;
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/api/profiles/${user.email}`);
-        const data = await res.json();
+        const [profileRes, artworksData] = await Promise.all([
+          fetch(`${BASE_URL}/api/profiles/${user.email}`, { cache: "no-store" }),
+          getArtworks(user.email)
+        ]);
+        
+        const data = await profileRes.json();
         setProfile(data);
+        setArtworksCount(artworksData.length);
+        
         setFormData({
           name: data.name || user.name || "",
           bio: data.bio || "",
@@ -76,7 +87,7 @@ export default function ArtistProfilePage() {
           instagram: data.instagram || "",
         });
       } catch {
-        console.error("Failed to load profile");
+        console.error("Failed to load profile data");
       } finally {
         setLoadingProfile(false);
       }
@@ -169,11 +180,11 @@ export default function ArtistProfilePage() {
   const profileImage = profile?.profileImage || user?.image;
   const coverImage = profile?.coverImage;
 
-  // Mock stats for the UI
+  // Dynamic stats for the UI
   const stats = [
-    { label: "Followers", value: "12.5K", icon: Users, color: "text-green-500", bg: "bg-green-500/10" },
-    { label: "Artworks", value: "45", icon: Palette, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Sales", value: "128", icon: ShoppingBag, color: "text-orange-500", bg: "bg-orange-500/10" },
+    { label: "Followers", value: profile?.followers?.length || 0, icon: Users, color: "text-green-500", bg: "bg-green-500/10" },
+    { label: "Artworks", value: artworksCount, icon: Palette, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: "Sales", value: profile?.itemsSold || 0, icon: ShoppingBag, color: "text-orange-500", bg: "bg-orange-500/10" },
   ];
 
   return (
@@ -437,7 +448,11 @@ export default function ArtistProfilePage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="rounded-3xl border border-separator/60 bg-background/50 backdrop-blur-xl p-5 shadow-sm hover:shadow-md transition-shadow"
+                onClick={() => {
+                  if (stat.label === "Followers") setIsFollowersModalOpen(true);
+                  if (stat.label === "Artworks") router.push("/dashboard/artist/artworks");
+                }}
+                className={`rounded-3xl border border-separator/60 bg-background/50 backdrop-blur-xl p-5 shadow-sm transition-shadow ${(stat.label === "Followers" || stat.label === "Artworks") ? "cursor-pointer hover:shadow-md hover:border-primary/50" : ""}`}
               >
                 <div className={`size-10 rounded-2xl ${stat.bg} flex items-center justify-center mb-4`}>
                   <stat.icon className={`size-5 ${stat.color}`} />
@@ -470,6 +485,69 @@ export default function ArtistProfilePage() {
           </motion.div>
         </div>
       </div>
+
+      {/* Followers Modal */}
+      {isFollowersModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div 
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsFollowersModalOpen(false)} 
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            className="relative w-full max-w-md overflow-hidden rounded-2xl bg-background border border-separator/60 shadow-2xl p-6 z-10 max-h-[80vh] flex flex-col"
+          >
+            <div className="flex items-center justify-between border-b border-separator/30 pb-4 mb-4">
+              <h2 className="text-xl font-bold text-foreground">Followers ({profile?.followers?.length || 0})</h2>
+              <button 
+                onClick={() => setIsFollowersModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <span className="sr-only">Close</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+              {!profile?.followers || profile.followers.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="size-12 mx-auto rounded-full bg-muted/30 flex items-center justify-center mb-3">
+                    <Users className="size-6 text-muted-foreground/50" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">No followers yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">When users follow you, they will appear here.</p>
+                </div>
+              ) : (
+                profile.followers.map((follower, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 rounded-xl border border-separator/40 hover:bg-muted/20 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-accent text-primary flex items-center justify-center font-bold overflow-hidden border border-separator/40 shrink-0">
+                        {follower.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={follower.image} alt={follower.name || "Follower"} className="w-full h-full object-cover" />
+                        ) : (
+                          (follower.name || "U")[0].toUpperCase()
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-foreground line-clamp-1">{follower.name || "Unknown User"}</p>
+                        <p className="text-xs text-muted-foreground">{follower.email}</p>
+                      </div>
+                    </div>
+                    {follower.role && (
+                      <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary uppercase tracking-wider shrink-0">
+                        {follower.role}
+                      </span>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
