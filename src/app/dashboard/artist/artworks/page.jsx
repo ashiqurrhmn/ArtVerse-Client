@@ -1,15 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, Download, Plus, Pencil, Trash2, ImageIcon } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Download,
+  Plus,
+  Pencil,
+  Trash2,
+  ImageIcon,
+} from "lucide-react";
 import Link from "next/link";
-import { getArtworks } from "@/lib/api/artworks";
+import { getArtworks, deleteArtwork } from "@/lib/api/artworks";
+import toast from "react-hot-toast";
 
 export default function ManageArtworksPage() {
   const [artworks, setArtworks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteId, setDeleteId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchArtworks = async () => {
@@ -28,15 +38,36 @@ export default function ManageArtworksPage() {
   const filteredArtworks = artworks.filter(
     (artwork) =>
       artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      artwork.category.toLowerCase().includes(searchTerm.toLowerCase())
+      artwork.category.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const totalArtworks = artworks.length;
-  const publishedCount = artworks.filter(a => a.status === "Published").length;
+  const publishedCount = artworks.filter(
+    (a) => a.status === "Published",
+  ).length;
 
-  const handleDelete = (id) => {
-    setArtworks((prev) => prev.filter((a) => a._id !== id));
-    setDeleteId(null);
+  const openDeleteModal = (id) => {
+    setDeleteId(id);
+    setIsModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      const res = await deleteArtwork(deleteId);
+      if (res.deletedCount > 0) {
+        setArtworks((prev) => prev.filter((a) => a._id !== deleteId));
+        toast.success("Artwork deleted successfully");
+      } else {
+        toast.error("Failed to delete artwork");
+      }
+    } catch (error) {
+      console.error("Failed to delete artwork:", error);
+      toast.error("Failed to delete artwork");
+    } finally {
+      setDeleteId(null);
+      setIsModalOpen(false);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -53,7 +84,6 @@ export default function ManageArtworksPage() {
 
   return (
     <div className="min-h-full text-foreground px-4 md:px-10 pb-16">
-      
       {/* ── Page Header ── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-8">
         <div>
@@ -68,13 +98,19 @@ export default function ManageArtworksPage() {
         {/* Quick Stats Summary */}
         <div className="flex items-center gap-4 bg-accent/30 dark:bg-accent/20 border border-separator rounded-xl px-5 py-3 shadow-sm">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Total Artworks</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Total Artworks
+            </p>
             <p className="text-xl font-bold text-foreground">{totalArtworks}</p>
           </div>
           <div className="w-px h-10 bg-separator mx-2" />
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Published</p>
-            <p className="text-xl font-bold text-foreground">{publishedCount}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Published
+            </p>
+            <p className="text-xl font-bold text-foreground">
+              {publishedCount}
+            </p>
           </div>
           <div className="w-px h-10 bg-separator mx-2 hidden sm:block" />
           <div className="hidden sm:block">
@@ -102,7 +138,6 @@ export default function ManageArtworksPage() {
 
       {/* ── Main Content Area ── */}
       <div className="rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6 shadow-xl shadow-black/5 dark:shadow-none">
-        
         {/* Toolbar: Search & Filters */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
           <div className="relative w-full sm:max-w-xs">
@@ -140,13 +175,18 @@ export default function ManageArtworksPage() {
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Date</th>
                   <th className="px-6 py-4">View</th>
-                  <th className="px-6 py-4 text-right rounded-tr-xl">Actions</th>
+                  <th className="px-6 py-4 text-right rounded-tr-xl">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-separator/60">
                 {isLoading ? (
                   [...Array(5)].map((_, i) => (
-                    <tr key={i} className="animate-pulse border-b border-separator/60 last:border-0">
+                    <tr
+                      key={i}
+                      className="animate-pulse border-b border-separator/60 last:border-0"
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="size-10 rounded-xl bg-muted/40 shrink-0"></div>
@@ -181,34 +221,53 @@ export default function ManageArtworksPage() {
                   ))
                 ) : filteredArtworks.length > 0 ? (
                   filteredArtworks.map((artwork) => (
-                    <tr key={artwork._id} className="transition-colors hover:bg-accent/30 dark:hover:bg-accent/20 group">
+                    <tr
+                      key={artwork._id}
+                      className="transition-colors hover:bg-accent/30 dark:hover:bg-accent/20 group"
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-separator bg-muted/40 text-muted-foreground overflow-hidden">
                             {artwork.image ? (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img src={artwork.image} alt={artwork.title} className="w-full h-full object-cover" />
+                              <img
+                                src={artwork.image}
+                                alt={artwork.title}
+                                className="w-full h-full object-cover"
+                              />
                             ) : (
                               <ImageIcon className="size-4" />
                             )}
                           </div>
                           <div>
-                            <p className="font-semibold text-foreground">{artwork.title}</p>
-                            <p className="text-xs text-muted-foreground">{artwork.category}</p>
+                            <p className="font-semibold text-foreground">
+                              {artwork.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {artwork.category}
+                            </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground">{artwork.category}</td>
-                      <td className="px-6 py-4 font-bold text-foreground">${artwork.price}</td>
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {artwork.category}
+                      </td>
+                      <td className="px-6 py-4 font-bold text-foreground">
+                        ${artwork.price}
+                      </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider border ${getStatusBadge(artwork.status)}`}>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider border ${getStatusBadge(artwork.status)}`}
+                        >
                           {artwork.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground">{artwork.date || "Just now"}</td>
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {artwork.date || "Just now"}
+                      </td>
                       <td className="px-6 py-4">
-                        <Link 
-                          href={`/artworks/${artwork._id}`} 
+                        <Link
+                          href={`/artworks/${artwork._id}`}
                           className="inline-flex items-center text-[11px] font-bold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors hover:underline underline-offset-2"
                         >
                           View Details
@@ -224,44 +283,39 @@ export default function ManageArtworksPage() {
                             <Pencil className="size-3.5" />
                           </Link>
 
-                          {deleteId === artwork._id ? (
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => handleDelete(artwork._id)}
-                                className="inline-flex h-8 items-center gap-1 rounded-lg bg-red-500/15 px-2.5 text-[11px] font-semibold text-red-600 transition hover:bg-red-500/25 dark:text-red-400"
-                                type="button"
-                              >
-                                Confirm
-                              </button>
-                              <button
-                                onClick={() => setDeleteId(null)}
-                                className="inline-flex h-8 items-center rounded-lg border border-separator px-2.5 text-[11px] font-semibold text-muted-foreground transition hover:bg-muted/20"
-                                type="button"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => setDeleteId(artwork._id)}
-                              className="inline-flex size-8 items-center justify-center rounded-lg border border-separator text-muted-foreground transition-all hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
-                              type="button"
-                              title="Delete artwork"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => openDeleteModal(artwork._id)}
+                            className="inline-flex size-8 items-center justify-center rounded-lg border border-separator text-muted-foreground transition-all hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
+                            type="button"
+                            title="Delete artwork"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-muted-foreground">
+                    <td
+                      colSpan="6"
+                      className="px-6 py-12 text-center text-muted-foreground"
+                    >
                       <div className="flex flex-col items-center justify-center">
                         <ImageIcon className="size-10 opacity-20 mb-3" />
-                        <p className="font-semibold text-foreground">No artworks found</p>
-                        <p className="text-sm mt-1">Try a different search or <Link href="/dashboard/artist/artworks/add" className="text-primary hover:underline">add a new artwork</Link>.</p>
+                        <p className="font-semibold text-foreground">
+                          No artworks found
+                        </p>
+                        <p className="text-sm mt-1">
+                          Try a different search or{" "}
+                          <Link
+                            href="/dashboard/artist/artworks/add"
+                            className="text-primary hover:underline"
+                          >
+                            add a new artwork
+                          </Link>
+                          .
+                        </p>
                       </div>
                     </td>
                   </tr>
@@ -270,8 +324,52 @@ export default function ManageArtworksPage() {
             </table>
           </div>
         </div>
-
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setIsModalOpen(false)} 
+          />
+          
+          {/* Modal Panel */}
+          <div className="relative w-full max-w-md rounded-2xl border border-separator/60 bg-background/95 backdrop-blur-xl p-6 shadow-2xl animate-in zoom-in-95 fade-in duration-200">
+            {/* Warning Icon */}
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-red-500/10 border border-red-500/20">
+              <Trash2 className="size-5 text-red-500" />
+            </div>
+            
+            {/* Title */}
+            <h3 className="text-center text-lg font-bold text-foreground mb-2">
+              Delete Artwork
+            </h3>
+            
+            {/* Description */}
+            <p className="text-center text-sm text-muted-foreground mb-6">
+              Are you sure you want to delete this artwork? This action is permanent and cannot be undone.
+            </p>
+            
+            {/* Actions */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="flex-1 rounded-xl border border-separator bg-accent/30 px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-accent/60"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-600 shadow-lg shadow-red-500/20"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
