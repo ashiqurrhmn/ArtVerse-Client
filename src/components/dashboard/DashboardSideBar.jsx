@@ -269,15 +269,17 @@ export function DashboardSideBar() {
     navItems = artistNavItems;
   }
 
-  const isActive = (href) => {
-    if (
-      href === "/dashboard/artist" ||
-      href === "/dashboard/admin" ||
-      href === "/dashboard/user"
-    ) {
-      return pathname === href;
+  const activeItemHref = navItems.reduce((bestMatch, item) => {
+    if (pathname?.startsWith(item.href) && item.href.length > bestMatch.length) {
+      if (pathname === item.href || pathname.charAt(item.href.length) === "/") {
+        return item.href;
+      }
     }
-    return pathname?.startsWith(href);
+    return bestMatch;
+  }, "");
+
+  const isActive = (href) => {
+    return href === activeItemHref;
   };
 
   // --- Shared UI blocks ---
@@ -290,7 +292,7 @@ export function DashboardSideBar() {
           <Link
             key={item.label}
             href={item.href}
-            className={`group relative flex items-center gap-3 py-3 pl-2.5 pr-4 text-[12px] font-medium transition-all duration-150 ${
+            className={`group relative flex items-center gap-3 py-3 pl-2.5 pr-4  font-medium transition-all duration-150 ${
               active
                 ? "bg-muted/35 text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/10"
@@ -315,7 +317,7 @@ export function DashboardSideBar() {
   );
 
   const profileBlock = (
-    <div className="flex flex-col gap-3 px-1 py-4 w-full mt-5">
+    <div className="flex flex-col gap-3 px-1 py-2 w-full mt-2">
       <div className="flex items-center gap-3">
         {userImage ? (
           <Image
@@ -331,10 +333,10 @@ export function DashboardSideBar() {
           </div>
         )}
         <div className="flex flex-col min-w-0">
-          <span className="text-[14px] font-semibold text-foreground truncate leading-tight">
+          <span className=" font-semibold text-foreground truncate leading-tight">
             {userName}
           </span>
-          <span className="text-[12px] text-muted-foreground capitalize truncate">
+          <span className="text-[14px] text-muted-foreground capitalize truncate">
             {userRole}
           </span>
         </div>
@@ -386,13 +388,13 @@ export function DashboardSideBar() {
   return (
     <>
       {/* ==================== Desktop Sidebar ==================== */}
-      <aside className="sticky border border-right-1 py-2 px-4 top-0 hidden min-h-screen w-[205px] shrink-0 flex-col border-r border-separator bg-background md:flex">
+      <aside className="sticky border border-right-1  px-4 top-0 hidden min-h-screen w-[300px] shrink-0 flex-col border-r border-separator bg-background md:flex">
         {/* Top section: logo + profile + nav */}
         <div className="flex flex-col flex-1 overflow-y-auto">
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center px-[18px] pb-4 pt-7 outline-none transition-opacity hover:opacity-80"
+            className="flex items-center px-[18px] pb-1  outline-none transition-opacity hover:opacity-80"
           >
             <Image
               src="/logo.png"

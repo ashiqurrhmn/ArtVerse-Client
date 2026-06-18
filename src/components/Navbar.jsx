@@ -105,59 +105,74 @@ const Navbar = () => {
               </>
             ) : (
               <Dropdown>
-                <Dropdown.Trigger className="rounded-full">
-                  <Avatar size="sm" aria-label="Menu" className="cursor-pointer">
+                <Dropdown.Trigger className="rounded-full ring-2 ring-transparent hover:ring-primary/50 transition-all">
+                  <Avatar size="sm" aria-label="Menu" className="cursor-pointer border border-separator">
                     <Avatar.Image
                       referrerPolicy="no-referrer"
                       alt={user?.name || "User"}
                       src={user?.image}
                     />
-                    <Avatar.Fallback>{user?.name?.charAt(0) || "U"}</Avatar.Fallback>
+                    <Avatar.Fallback className="bg-accent text-primary font-bold">
+                      {user?.name?.charAt(0) || "U"}
+                    </Avatar.Fallback>
                   </Avatar>
                 </Dropdown.Trigger>
-                <Dropdown.Popover>
-                  <div className="px-3 pt-3 pb-1">
-                    <div className="flex items-center gap-2">
-                      <Avatar size="sm">
+                <Dropdown.Popover className="bg-background border border-separator shadow-xl rounded-2xl min-w-[220px] p-2">
+                  <div className="px-3 pt-2 pb-3 mb-2 border-b border-separator">
+                    <div className="flex items-center gap-3">
+                      <Avatar size="sm" className="border border-separator">
                         <Avatar.Image alt={user?.name} src={user?.image} />
-                        <Avatar.Fallback delayMs={600}>{user?.name?.charAt(0) || "U"}</Avatar.Fallback>
+                        <Avatar.Fallback delayMs={600} className="bg-accent text-primary font-bold">
+                          {user?.name?.charAt(0) || "U"}
+                        </Avatar.Fallback>
                       </Avatar>
-                      <div className="flex flex-col gap-0">
-                        <p className="text-sm leading-5 font-medium">
+                      <div className="flex flex-col gap-0.5">
+                        <p className="text-sm font-bold text-foreground">
                           {user?.name}
                         </p>
-                        <p className="text-xs leading-none text-muted">
+                        <p className="text-xs font-medium text-muted-foreground truncate max-w-[140px]">
                           {user?.email}
                         </p>
                       </div>
                     </div>
                   </div>
                   <Dropdown.Menu
-                    onAction={(key) => console.log(`Selected: ${key}`)}
+                    aria-label="User Actions"
+                    className="p-0 flex flex-col gap-1"
+                    itemClasses={{
+                      base: [
+                        "rounded-xl",
+                        "text-foreground",
+                        "transition-colors",
+                        "data-[hover=true]:bg-accent",
+                        "data-[hover=true]:text-primary",
+                        "py-2"
+                      ]
+                    }}
                   >
-                    <Dropdown.Item key="dashboard" textValue="Dashboard">
-                      <Link href={`/dashboard/${user?.role}`} className="flex items-center gap-2">
-                        <MdDashboard />
-                        <Label>Dashboard</Label>
+                    <Dropdown.Item key="dashboard" textValue="Dashboard" className="hover:bg-accent hover:text-primary transition-colors rounded-xl">
+                      <Link href={`/dashboard/${user?.role}`} className="flex items-center gap-3 w-full">
+                        <MdDashboard className="text-lg" />
+                        <Label className="font-medium cursor-pointer">Dashboard</Label>
                       </Link>
                     </Dropdown.Item>
 
-                    <Dropdown.Item key="profile" textValue="Profile">
-                      <Link href={`/dashboard/profile`} className="flex items-center gap-2">
-                        <CgProfile />
-                        <Label>Profile</Label>
+                    <Dropdown.Item key="profile" textValue="Profile" className="hover:bg-accent hover:text-primary transition-colors rounded-xl">
+                      <Link href={`/dashboard/profile`} className="flex items-center gap-3 w-full">
+                        <CgProfile className="text-lg" />
+                        <Label className="font-medium cursor-pointer">Profile</Label>
                       </Link>
                     </Dropdown.Item>
 
                     <Dropdown.Item
                       key="logout"
                       textValue="Logout"
-                      variant="danger"
+                      className="hover:bg-red-500/10 hover:text-red-500 dark:hover:bg-red-500/20 text-red-500 transition-colors rounded-xl mt-1"
                       onClick={handleSignOut}
                     >
-                      <div className="flex items-center gap-2">
-                        <BiLogOut />
-                        <Label>Logout</Label>
+                      <div className="flex items-center gap-3 w-full">
+                        <BiLogOut className="text-lg" />
+                        <Label className="font-medium cursor-pointer text-inherit">Logout</Label>
                       </div>
                     </Dropdown.Item>
                   </Dropdown.Menu>
