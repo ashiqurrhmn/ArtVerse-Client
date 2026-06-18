@@ -18,6 +18,7 @@ export default function ManageArtworksPage() {
   const [artworks, setArtworks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortOption, setSortOption] = useState("default");
   const [deleteId, setDeleteId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -35,11 +36,21 @@ export default function ManageArtworksPage() {
     fetchArtworks();
   }, []);
 
-  const filteredArtworks = artworks.filter(
+  let filteredArtworks = artworks.filter(
     (artwork) =>
       artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       artwork.category.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+
+  if (sortOption === "price-asc") {
+    filteredArtworks.sort((a, b) => Number(a.price) - Number(b.price));
+  } else if (sortOption === "price-desc") {
+    filteredArtworks.sort((a, b) => Number(b.price) - Number(a.price));
+  } else if (sortOption === "date-newest") {
+    filteredArtworks.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  } else if (sortOption === "date-oldest") {
+    filteredArtworks.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+  }
 
   const totalArtworks = artworks.length;
   const publishedCount = artworks.filter(
@@ -152,10 +163,25 @@ export default function ManageArtworksPage() {
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg border border-separator bg-background px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-accent/40 text-foreground">
-              <Filter className="size-4" />
-              Filter
-            </button>
+            <div className="relative flex-1 sm:flex-none">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                <Filter className="size-4" />
+              </div>
+              <select
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value)}
+                className="w-full sm:w-auto appearance-none rounded-lg border border-separator bg-background pl-9 pr-8 py-2.5 text-sm font-semibold text-foreground outline-none transition-colors hover:bg-accent/40 focus:border-primary focus:ring-2 focus:ring-primary/20 cursor-pointer"
+              >
+                <option value="default">Sort by: Default</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="date-newest">Date: Newest First</option>
+                <option value="date-oldest">Date: Oldest First</option>
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+            </div>
             <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg border border-separator bg-background px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-accent/40 text-foreground">
               <Download className="size-4" />
               Export
