@@ -30,6 +30,7 @@ export default function ManageArtworksPage() {
         setArtworks(data || []);
       } catch (error) {
         console.error("Failed to fetch artworks", error);
+        toast.error("Failed to load artworks");
       } finally {
         setIsLoading(false);
       }

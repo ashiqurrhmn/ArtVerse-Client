@@ -6,6 +6,7 @@ import { getArtworkById } from "@/lib/api/artworks";
 import { ArrowLeft, Heart, Share2, ImageIcon, ShoppingCart, Calendar, Tag, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 
 export default function ArtworkDetailsPage() {
   const params = useParams();
@@ -24,6 +25,7 @@ export default function ArtworkDetailsPage() {
         setArtwork(data);
       } catch (error) {
         console.error("Failed to fetch artwork", error);
+        toast.error("Failed to load artwork details");
       } finally {
         setIsLoading(false);
       }
