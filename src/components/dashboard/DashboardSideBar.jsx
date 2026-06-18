@@ -221,6 +221,7 @@ export function DashboardSideBar() {
 
   const artistNavItems = [
     { icon: GridIcon, label: "Dashboard", href: "/dashboard/artist" },
+    { icon: UsersIcon, label: "Profile", href: "/dashboard/artist/profile" },
     {
       icon: ImageIcon,
       label: "Manage Artworks",

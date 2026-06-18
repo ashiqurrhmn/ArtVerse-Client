@@ -12,8 +12,11 @@ export default function ArtworkCard({ artwork, index }) {
       transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
       className="group relative flex flex-col overflow-hidden rounded-3xl bg-background/60 backdrop-blur-xl border border-separator/60 shadow-xl shadow-black/5 dark:shadow-none transition-all hover:-translate-y-2 hover:shadow-2xl hover:border-primary/40 cursor-pointer"
     >
+      {/* Invisible Full-Card Link */}
+      <Link href={`/artworks/${artwork._id}`} className="absolute inset-0 z-10" aria-label={`View details of ${artwork.title}`} />
+
       {/* Image Container */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted/20 rounded-t-3xl">
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted/20 rounded-t-3xl pointer-events-none">
         {artwork.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -33,22 +36,24 @@ export default function ArtworkCard({ artwork, index }) {
         {/* Floating Price Badge */}
         <motion.div 
           whileHover={{ scale: 1.05 }}
-          className="absolute right-3 top-3 rounded-full bg-background/90 backdrop-blur-md px-3 py-1.5 text-sm font-bold text-foreground shadow-md border border-separator/50 z-10"
+          className="absolute right-3 top-3 rounded-full bg-background/90 backdrop-blur-md px-3 py-1.5 text-sm font-bold text-foreground shadow-md border border-separator/50 z-20 pointer-events-none"
         >
           ${artwork.price}
         </motion.div>
       </div>
 
       {/* Details Section */}
-      <div className="relative z-20 flex flex-col justify-end p-4 bg-background/40">
-        <h3 className="text-lg font-bold text-foreground line-clamp-1 transition-colors group-hover:text-primary">
-          {artwork.title}
+      <div className="relative z-20 flex flex-col justify-end p-4 bg-background/40 pointer-events-none">
+        <h3 className="text-lg font-bold text-foreground line-clamp-1 transition-colors group-hover:text-primary pointer-events-auto w-fit">
+          <Link href={`/artworks/${artwork._id}`} className="relative z-30">
+            {artwork.title}
+          </Link>
         </h3>
         <p className="mt-1 text-xs font-medium text-muted-foreground line-clamp-1">
           by <span className="text-foreground/90">{artwork.userName || "Alex Sterling"}</span>
         </p>
 
-        <div className="mt-4 flex items-center justify-between border-t border-separator/60 pt-3">
+        <div className="mt-4 flex items-center justify-between border-t border-separator/60 pt-3 pointer-events-auto relative z-30">
           <Link href={`/artworks/${artwork._id}`}>
             <button className="rounded-full bg-primary/10 px-3 sm:px-4 py-1.5 text-[11px] sm:text-xs font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground">
               View<span className="hidden sm:inline"> Artwork</span>
