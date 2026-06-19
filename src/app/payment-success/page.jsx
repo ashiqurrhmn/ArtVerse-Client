@@ -63,13 +63,12 @@ function SuccessContent() {
           We couldn't verify your payment. Please contact support if you were
           charged.
         </p>
-        <Button
-          as={Link}
+        <Link
           href="/browse"
           className="w-full bg-primary text-primary-foreground font-bold py-6 rounded-full"
         >
           Back to Browse
-        </Button>
+        </Link>
       </motion.div>
     );
   }
@@ -158,23 +157,22 @@ function SuccessContent() {
         transition={{ delay: 0.8, duration: 0.5 }}
         className="flex flex-col gap-4"
       >
-        <Button
-          as={Link}
+        <Link
           href="/dashboard/buyer"
-          className="w-full bg-primary text-primary-foreground font-bold py-7 rounded-full shadow-lg hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-base"
+          className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-full shadow-lg hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-base"
         >
           <LayoutDashboard className="w-5 h-5" />
           Go to Dashboard
-        </Button>
+        </Link>
 
-        <Button
-          as={Link}
+        <Link
+          
           href="/browse"
-          className="w-full bg-transparent text-foreground font-bold py-7 rounded-full border-2 border-separator hover:border-primary/50 hover:bg-accent/20 transition-all flex items-center justify-center gap-2 text-base"
+          className="w-full bg-transparent text-foreground font-bold py-4 rounded-full border-2 border-separator hover:border-primary/50 hover:bg-accent/20 transition-all flex items-center justify-center gap-2 text-base"
         >
           <ShoppingBag className="w-5 h-5" />
           Browse More Art
-        </Button>
+        </Link>
       </motion.div>
     </motion.div>
   );
