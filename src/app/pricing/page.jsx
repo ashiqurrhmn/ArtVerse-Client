@@ -66,7 +66,7 @@ export default function PricingPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="mx-auto max-w-7xl px-4 py-16 md:py-24 text-center"
+        className="mx-auto max-w-[70%] px-4 py-16 md:py-24 text-center"
       >
         <span className="inline-flex rounded-full border border-separator bg-accent/30 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
           Subscription Tier Overview

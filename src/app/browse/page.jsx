@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getArtworks } from "@/lib/api/artworks";
-import { Search, Filter, SlidersHorizontal, ImageIcon } from "lucide-react";
+import { Search, Filter, SlidersHorizontal, ImageIcon, ChevronDown } from "lucide-react";
 import ArtworkCard from "@/components/ArtworkCard";
 
 const categories = [
@@ -22,6 +22,7 @@ export default function BrowseArtworksPage() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [sortOption, setSortOption] = useState("newest");
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
     const fetchArtworks = async () => {
@@ -68,10 +69,10 @@ export default function BrowseArtworksPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background pt-8 pb-20 px-4 md:px-10">
-      <div className="mx-auto max-w-[1400px]">
+    <main className="min-h-screen bg-background pt-10 pb-20 px-4 md:px-30">
+      <div className="">
         {/* Page Header */}
-        <div className="mb-10 text-center md:text-left">
+        <div className="mb-10 text-center max-w-2xl mx-auto">
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
             Browse Artworks
           </h1>
@@ -80,9 +81,23 @@ export default function BrowseArtworksPage() {
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+          {/* ── MOBILE FILTER TOGGLE ── */}
+          <div className="w-full lg:hidden">
+            <button
+              onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
+              className="flex w-full items-center justify-between rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl px-5 py-4 text-sm font-bold shadow-sm transition-colors hover:bg-muted/20"
+            >
+              <div className="flex items-center gap-2">
+                <Filter className="size-4" />
+                <span>Filters & Sort</span>
+              </div>
+              <ChevronDown className={`size-5 transition-transform duration-300 ${isMobileFiltersOpen ? "rotate-180" : ""}`} />
+            </button>
+          </div>
+
           {/* ── LEFT SIDEBAR (Filters & Sort) ── */}
-          <aside className="w-full lg:w-72 shrink-0 space-y-6 rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6 shadow-xl shadow-black/5 dark:shadow-none lg:sticky lg:top-24">
+          <aside className={`w-full lg:w-72 shrink-0 space-y-6 rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6 shadow-xl shadow-black/5 dark:shadow-none lg:sticky lg:top-24 ${isMobileFiltersOpen ? "block" : "hidden lg:block"}`}>
             {/* Search */}
             <div className="flex flex-col gap-2">
               <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -173,10 +188,10 @@ export default function BrowseArtworksPage() {
           </aside>
 
           {/* ── RIGHT CONTENT (Artworks Grid) ── */}
-          <div className="flex-1 w-full">
+          <div className="flex-1 w-full ">
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
-                {[...Array(6)].map((_, i) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+                {[...Array(12)].map((_, i) => (
                   <div key={i} className="animate-pulse rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-4 shadow-sm">
                     <div className="aspect-[4/5] w-full rounded-xl bg-muted/40"></div>
                     <div className="mt-4 space-y-2">
@@ -187,7 +202,7 @@ export default function BrowseArtworksPage() {
                 ))}
               </div>
             ) : filteredArtworks.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
                 {filteredArtworks.map((artwork, index) => (
                   <ArtworkCard key={artwork._id} artwork={artwork} index={index} />
                 ))}

@@ -22,16 +22,16 @@ export default function Footer() {
   return (
     <footer className="mt-16 border-t  bg-background">
       <div className="container mx-auto px-4">
-        <div className="grid gap-10 max-w-7xl mx-auto py-12 md:grid-cols-2 lg:grid-cols-4">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-30 max-w-7xl mx-auto py-10 md:py-12">
           {/* Brand */}
-          <div>
+          <div className="flex flex-col items-start lg:w-1/4 shrink-0">
             <Link href="/" className="inline-block">
               <Image
                 src="/logo.png"
                 alt="Logo"
-                width={320}
-                height={80}
-                className="h-24 w-auto"
+                width={150}
+                height={60}
+                className="w-32 md:w-40 h-auto"
               />
             </Link>
 
@@ -68,8 +68,10 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Shop */}
-          <div>
+          {/* Links Wrapper */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 flex-1">
+            {/* Shop */}
+            <div>
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider">
               Shop
             </h3>
@@ -128,8 +130,8 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact */}
-          <div>
+            {/* Contact */}
+            <div className="col-span-2 sm:col-span-1">
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider">
               Contact
             </h3>
@@ -150,6 +152,7 @@ export default function Footer() {
                 <span>support@example.com</span>
               </div>
             </div>
+          </div>
           </div>
         </div>
 

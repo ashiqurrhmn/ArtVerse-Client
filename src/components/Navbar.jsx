@@ -32,52 +32,29 @@ const Navbar = () => {
   return (
     <>
       <div className="h-16 w-full"></div>
-      <nav className="fixed top-0 z-50 w-full border-b border-separator bg-background/60 backdrop-blur-md transition-colors duration-300">
-        <header className="mx-auto flex h-16 max-w-7xl items-center justify-between px-2">
-          <div className="flex items-center gap-4">
-            <button
-              className="md:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Toggle menu"
-              aria-expanded={isMenuOpen}
-            >
-              <span className="sr-only">Menu</span>
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                {isMenuOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                )}
-              </svg>
-            </button>
-            <Link href={'/'}>
-              <div className="flex items-center gap-3">
-                <Image
-                  height={60}
-                  width={150}
-                  loading="eager"
-                  src="/logo.png"
-                  alt="logo"
-                />
-              </div>
-            </Link>
-          </div>
+      <nav className="fixed top-0 z-50 w-full border-b border-separator bg-background/60 backdrop-blur-md transition-colors duration-300 py-1">
+        <header className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
+          <Link href={'/'}>
+            <div className="flex items-center gap-3">
+              <Image
+                height={48}
+                width={120}
+                className="w-28 md:w-[120px] h-auto"
+                loading="eager"
+                src="/logo.png"
+                alt="logo"
+              />
+            </div>
+          </Link>
           <ul className="hidden items-center gap-4 md:flex">
+            <li>
+              <Link
+                href="/"
+                className={`font-medium transition-colors ${pathname === '/' ? 'text-navlight dark:text-primary underline underline-offset-4 decoration-2' : 'text-foreground hover:text-navlight dark:hover:text-primary'}`}
+              >
+                Home
+              </Link>
+            </li>
             <li>
               <Link
                 href="/browse"
@@ -96,7 +73,8 @@ const Navbar = () => {
             </li>
           </ul>
           
-          <div className="hidden items-center gap-4 md:flex">
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="hidden items-center gap-4 md:flex">
             <ThemeSwitcher />
             
             {!user ? (
@@ -182,12 +160,40 @@ const Navbar = () => {
                 </Dropdown.Popover>
               </Dropdown>
             )}
+            </div>
+
+            {/* Mobile Menu Toggle Button */}
+            <button
+              className="md:hidden rounded-full p-2 bg-accent/30 text-foreground transition-colors hover:bg-accent/60"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Toggle menu"
+              aria-expanded={isMenuOpen}
+            >
+              <span className="sr-only">Menu</span>
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                {isMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
           </div>
         </header>
         
         {isMenuOpen && (
           <div className="border-t border-separator md:hidden">
             <ul className="flex flex-col gap-2 p-4">
+              <li>
+                <Link href="/" className={`block py-2 font-medium ${pathname === '/' ? 'text-navlight dark:text-primary underline underline-offset-4 decoration-2' : 'text-foreground hover:text-navlight dark:hover:text-primary'}`}>
+                  Home
+                </Link>
+              </li>
               <li>
                 <Link href="/browse" className={`block py-2 font-medium ${pathname === '/browse' ? 'text-navlight dark:text-primary underline underline-offset-4 decoration-2' : 'text-foreground hover:text-navlight dark:hover:text-primary'}`}>
                   Browse Artworks
