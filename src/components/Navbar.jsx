@@ -139,7 +139,7 @@ const Navbar = () => {
                     </Dropdown.Item>
 
                     <Dropdown.Item key="profile" textValue="Profile" className="hover:bg-accent hover:text-primary transition-colors rounded-xl">
-                      <Link href={`/dashboard/artist/profile`} className="flex items-center gap-3 w-full">
+                      <Link href={`/dashboard/profile`} className="flex items-center gap-3 w-full">
                         <CgProfile className="text-lg" />
                         <Label className="font-medium cursor-pointer">Profile</Label>
                       </Link>

@@ -21,7 +21,8 @@ export default function BoughtArtworksPage() {
     { value: "price-low", label: "Price: Low to High" },
   ];
 
-  const currentSortLabel = sortOptions.find(opt => opt.value === sortBy)?.label || "Newest First";
+  const currentSortLabel =
+    sortOptions.find((opt) => opt.value === sortBy)?.label || "Newest First";
 
   const { data: session } = authClient.useSession();
   const user = session?.user;
@@ -35,7 +36,7 @@ export default function BoughtArtworksPage() {
     const fetchPurchases = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/purchases?email=${encodeURIComponent(user.email)}`
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/purchases?email=${encodeURIComponent(user.email)}`,
         );
         const data = await res.json();
         setPurchases(data || []);
@@ -51,16 +52,22 @@ export default function BoughtArtworksPage() {
 
   const filteredPurchases = purchases.filter((purchase) => {
     const searchString = String(searchTerm).toLowerCase();
-    const title = String(purchase.artworkTitle || purchase.artwork?.title || "").toLowerCase();
+    const title = String(
+      purchase.artworkTitle || purchase.artwork?.title || "",
+    ).toLowerCase();
     const artist = String(purchase.artwork?.userName || "").toLowerCase();
     return title.includes(searchString) || artist.includes(searchString);
   });
 
   const sortedPurchases = [...filteredPurchases].sort((a, b) => {
     if (sortBy === "newest") {
-      return new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime();
+      return (
+        new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime()
+      );
     } else if (sortBy === "oldest") {
-      return new Date(a.purchasedAt).getTime() - new Date(b.purchasedAt).getTime();
+      return (
+        new Date(a.purchasedAt).getTime() - new Date(b.purchasedAt).getTime()
+      );
     } else if (sortBy === "price-high") {
       return (Number(b.amount) || 0) - (Number(a.amount) || 0);
     } else if (sortBy === "price-low") {
@@ -71,11 +78,12 @@ export default function BoughtArtworksPage() {
   return (
     <div className="flex-1 w-full p-4 md:p-6 overflow-y-auto">
       <div className=" space-y-8">
-        
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Bought Artworks</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+              Bought Artworks
+            </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Your personal collection of purchased masterpieces.
             </p>
@@ -102,14 +110,14 @@ export default function BoughtArtworksPage() {
               <span>{currentSortLabel}</span>
               <Filter className="w-4 h-4 text-muted-foreground" />
             </button>
-            
+
             {isDropdownOpen && (
               <>
-                <div 
-                  className="fixed inset-0 z-40" 
-                  onClick={() => setIsDropdownOpen(false)} 
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsDropdownOpen(false)}
                 />
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
@@ -123,7 +131,9 @@ export default function BoughtArtworksPage() {
                         setIsDropdownOpen(false);
                       }}
                       className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted/20 ${
-                        sortBy === option.value ? "font-bold text-primary bg-primary/5" : "text-foreground font-medium"
+                        sortBy === option.value
+                          ? "font-bold text-primary bg-primary/5"
+                          : "text-foreground font-medium"
                       }`}
                     >
                       {option.label}
@@ -139,7 +149,10 @@ export default function BoughtArtworksPage() {
         {isLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-6">
             {[...Array(6)].map((_, idx) => (
-              <div key={idx} className="bg-background border border-separator rounded-2xl overflow-hidden shadow-sm animate-pulse flex flex-col">
+              <div
+                key={idx}
+                className="bg-background border border-separator rounded-2xl overflow-hidden shadow-sm animate-pulse flex flex-col"
+              >
                 <div className="w-full aspect-[4/3] bg-muted/20"></div>
                 <div className="p-3 md:p-5 flex flex-col justify-between flex-1 gap-3">
                   <div>
@@ -159,11 +172,14 @@ export default function BoughtArtworksPage() {
             <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mb-4">
               <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">No artworks yet</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">
+              No artworks yet
+            </h3>
             <p className="text-muted-foreground max-w-sm">
-              Your collection is currently empty. Visit the browse page to find your next masterpiece.
+              Your collection is currently empty. Visit the browse page to find
+              your next masterpiece.
             </p>
-            <Link 
+            <Link
               href="/browse"
               className="mt-6 px-6 py-3 bg-primary text-primary-foreground font-bold rounded-xl hover:brightness-110 transition-all shadow-lg"
             >
@@ -175,68 +191,94 @@ export default function BoughtArtworksPage() {
             <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mb-4">
               <Search className="w-8 h-8 text-muted-foreground/50" />
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">No results found</h3>
-            <p className="text-muted-foreground">Try adjusting your search terms.</p>
+            <h3 className="text-xl font-bold text-foreground mb-2">
+              No results found
+            </h3>
+            <p className="text-muted-foreground">
+              Try adjusting your search terms.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-6">
             {sortedPurchases.map((purchase, idx) => (
-            <motion.div
-              key={purchase._id}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: idx * 0.1 }}
-              className="group flex flex-col bg-background border border-separator rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all"
-            >
-              {/* Image Container */}
-              <div className="relative w-full aspect-[4/3] bg-muted/20 overflow-hidden">
-                {purchase.artwork?.image ? (
-                  <Image
-                    src={purchase.artwork.image}
-                    alt={purchase.artworkTitle || purchase.artwork.title || "Artwork"}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="w-12 h-12 text-muted-foreground/30" />
+              <motion.div
+                key={purchase._id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: idx * 0.1 }}
+                className="group flex flex-col bg-background border border-separator rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all"
+              >
+                {/* Image Container */}
+                <div className="relative w-full aspect-[4/3] bg-muted/20 overflow-hidden">
+                  {purchase.artwork?.image ? (
+                    <Image
+                      src={purchase.artwork.image}
+                      alt={
+                        purchase.artworkTitle ||
+                        purchase.artwork.title ||
+                        "Artwork"
+                      }
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ImageIcon className="w-12 h-12 text-muted-foreground/30" />
+                    </div>
+                  )}
+                  {/* Overlay on hover */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <Link
+                      href={`/artworks/${purchase.artworkId}`}
+                      className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-full text-xs md:text-sm font-medium hover:bg-white/30 transition-colors"
+                    >
+                      View Details
+                      <ExternalLink className="w-3 h-3 md:w-4 md:h-4" />
+                    </Link>
                   </div>
-                )}
-                {/* Overlay on hover */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <Link
-                    href={`/artworks/${purchase.artworkId}`}
-                    className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-full text-xs md:text-sm font-medium hover:bg-white/30 transition-colors"
-                  >
-                    View Details
-                    <ExternalLink className="w-3 h-3 md:w-4 md:h-4" />
-                  </Link>
                 </div>
-              </div>
 
-              {/* Details */}
-              <div className="p-3 md:p-5 flex flex-col justify-between flex-1">
-                <div>
-                  <h3 className="text-sm md:text-base lg:text-sm xl:text-base font-bold text-foreground mb-0.5 md:mb-1 line-clamp-1">
-                    {purchase.artworkTitle || purchase.artwork?.title || "Unknown Artwork"}
-                  </h3>
-                  <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">
-                    By <span className="font-medium text-foreground">{purchase.artwork?.userName || "Unknown Artist"}</span>
-                  </p>
+                {/* Details */}
+                <div className="p-3 md:p-5 flex flex-col justify-between flex-1">
+                  <div>
+                    <h3 className="text-sm md:text-base lg:text-sm xl:text-base font-bold text-foreground mb-0.5 md:mb-1 line-clamp-1">
+                      {purchase.artworkTitle ||
+                        purchase.artwork?.title ||
+                        "Unknown Artwork"}
+                    </h3>
+                    <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">
+                      By{" "}
+                      {purchase.artwork?.userEmail ? (
+                        <Link
+                          href={`/artist/${purchase.artwork.userEmail}`}
+                          className="font-medium text-foreground hover:text-primary hover:underline transition-colors"
+                        >
+                          {purchase.artwork?.userName || "Unknown Artist"}
+                        </Link>
+                      ) : (
+                        <span className="font-medium text-foreground">
+                          {purchase.artwork?.userName || "Unknown Artist"}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="mt-2 md:mt-4 pt-2 md:pt-4 border-t border-separator flex flex-col xl:flex-row xl:items-center justify-between gap-1 xl:gap-0">
+                    <span className="text-sm md:text-base lg:text-sm xl:text-base font-bold text-primary">
+                      ${purchase.amount}
+                    </span>
+                    <span className="text-[10px] md:text-xs text-muted-foreground truncate">
+                      {new Date(purchase.purchasedAt).toLocaleDateString(
+                        "en-US",
+                        { month: "short", day: "numeric", year: "numeric" },
+                      )}
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-2 md:mt-4 pt-2 md:pt-4 border-t border-separator flex flex-col xl:flex-row xl:items-center justify-between gap-1 xl:gap-0">
-                  <span className="text-sm md:text-base lg:text-sm xl:text-base font-bold text-primary">${purchase.amount}</span>
-                  <span className="text-[10px] md:text-xs text-muted-foreground truncate">
-                    {new Date(purchase.purchasedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
         )}
-
       </div>
     </div>
   );

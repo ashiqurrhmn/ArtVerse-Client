@@ -50,6 +50,20 @@ export async function POST(request) {
         );
         console.log("DB Update - matched:", result.matchedCount, "modified:", result.modifiedCount);
 
+        // Record the subscription transaction in the database
+        const subscriptionRecord = {
+          userId: userId || null,
+          userEmail: userEmail,
+          plan: newPlan,
+          status: 'active',
+          transactionId: session.payment_intent || session.id,
+          amount: session.amount_total ? session.amount_total / 100 : 0,
+          currency: session.currency || 'usd',
+          createdAt: new Date().toISOString(),
+        };
+
+        await db.collection('subscriptions').insertOne(subscriptionRecord);
+
         return NextResponse.json({ success: true, plan: newPlan, modified: result.modifiedCount });
       } else {
         console.log("Missing newPlan or userId/email in metadata");

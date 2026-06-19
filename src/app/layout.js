@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
       className={`${inter.className} h-full antialiased overflow-x-hidden`}
       suppressHydrationWarning
     >
-      <body className="overflow-x-hidden">
+      <body className="overflow-x-hidden" suppressHydrationWarning>
         <Providers>
           <Navbar />
           <main className="min-h-screen">{children}</main>
