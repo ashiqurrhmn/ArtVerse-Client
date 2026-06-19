@@ -208,7 +208,7 @@ export function DashboardSideBar() {
 
   const adminNavItems = [
     { icon: GridIcon, label: "Analytics Overview", href: "/dashboard/admin" },
-    { icon: UsersIcon, label: "Manage Users", href: "/dashboard/admin/users" },
+    { icon: UsersIcon, label: "Manage Users", href: "/dashboard/admin/manage-user" },
     {
       icon: ImageIcon,
       label: "Manage Artworks",
