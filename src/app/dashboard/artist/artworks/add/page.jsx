@@ -103,7 +103,7 @@ export default function AddArtworkPage() {
       const res = await addArtwork(artworkData);
 
       if (res.insertedId) {
-        toast.success("Artwork added successfully");
+        toast.success("Artwork added successfully. Now wait for admin review...");
         router.push("/dashboard/artist/artworks");
       } else {
         toast.error("Failed to add artwork");

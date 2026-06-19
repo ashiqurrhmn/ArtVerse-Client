@@ -112,6 +112,27 @@ export default function ArtworkDetailsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
+              {/* Status Banners */}
+              {artwork.status === "Reviewing" && (
+                <div className="mb-6 rounded-2xl bg-yellow-500/10 p-4 border border-yellow-500/20 flex items-start gap-3">
+                  <div className="size-5 text-yellow-600 dark:text-yellow-500 mt-0.5 flex items-center justify-center font-bold">!</div>
+                  <div>
+                    <p className="text-sm font-bold text-yellow-600 dark:text-yellow-500">Admin is reviewing this post</p>
+                    <p className="text-xs text-yellow-600/80 dark:text-yellow-500/80 mt-0.5">This artwork is currently under review and is not publicly visible yet.</p>
+                  </div>
+                </div>
+              )}
+              
+              {artwork.status === "Rejected" && (
+                <div className="mb-6 rounded-2xl bg-red-500/10 p-4 border border-red-500/20 flex items-start gap-3">
+                  <div className="size-5 text-red-600 dark:text-red-500 mt-0.5 flex items-center justify-center font-bold">X</div>
+                  <div>
+                    <p className="text-sm font-bold text-red-600 dark:text-red-500">Artwork Rejected</p>
+                    <p className="text-xs text-red-600/80 dark:text-red-500/80 mt-0.5">This artwork did not meet the platform guidelines and has been rejected.</p>
+                  </div>
+                </div>
+              )}
+
               {/* Category & Status */}
               <div className="flex items-center gap-3 mb-4">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
@@ -152,10 +173,12 @@ export default function ArtworkDetailsPage() {
                 </p>
                 
                 <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-4">
-                  <button className="w-full sm:flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground px-6 md:px-8 py-3.5 md:py-4 text-sm font-bold text-background transition-all hover:bg-foreground/90 hover:scale-[1.02] shadow-xl shadow-foreground/20">
-                    <ShoppingCart className="size-4 md:size-5" />
-                    Purchase Art
-                  </button>
+                  {(!artwork.status || artwork.status === "Published") && (
+                    <button className="w-full sm:flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground px-6 md:px-8 py-3.5 md:py-4 text-sm font-bold text-background transition-all hover:bg-foreground/90 hover:scale-[1.02] shadow-xl shadow-foreground/20">
+                      <ShoppingCart className="size-4 md:size-5" />
+                      Purchase Art
+                    </button>
+                  )}
                   <div className="flex items-center gap-3 w-full sm:w-auto">
                     <button className="flex-1 sm:flex-none flex size-12 md:size-14 items-center justify-center rounded-2xl border-2 border-separator bg-background text-muted-foreground transition-all hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-500">
                       <Heart className="size-5 md:size-6" />
@@ -174,15 +197,17 @@ export default function ArtworkDetailsPage() {
               </div>
 
               {/* Trust Badges */}
-              <div className="rounded-2xl bg-accent/30 p-5 border border-separator/50 flex flex-col gap-3">
-                <div className="flex items-start gap-3">
-                  <ShieldCheck className="size-5 text-green-500 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-bold text-foreground">Authenticity Guaranteed</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Verified original artwork from the artist.</p>
+              {(!artwork.status || artwork.status === "Published") && (
+                <div className="rounded-2xl bg-accent/30 p-5 border border-separator/50 flex flex-col gap-3">
+                  <div className="flex items-start gap-3">
+                    <ShieldCheck className="size-5 text-green-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-bold text-foreground">Authenticity Guaranteed</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Verified original artwork from the artist.</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
             </motion.div>
           </div>
