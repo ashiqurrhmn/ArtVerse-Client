@@ -165,8 +165,8 @@ export function DashboardSideBar() {
   let userRole = user?.role || "buyer";
   if (userRole === "seller") userRole = "artist";
   const { profile } = useProfile();
-  const userName = profile?.name || "Artist";
-  const userImage = profile?.profileImage;
+  const userName = profile?.name || user?.name ||"Artist";
+  const userImage = profile?.profileImage || user?.image ;
   const userPlan = user?.plan || "free";
   const normalizedPlan = userPlan.toLowerCase();
   const isPremium =

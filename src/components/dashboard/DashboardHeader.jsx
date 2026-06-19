@@ -8,8 +8,8 @@ export default function DashboardHeader() {
   const { data: session, isPending } = useSession();
   const user = session?.user;
   const { profile } = useProfile();
-  const userName = profile?.name || "Artist";
-  const userImage = profile?.profileImage;
+const userName = profile?.name || user?.name ||"Artist";
+  const userImage = profile?.profileImage || user?.image ;
   let userRole = user?.role || "buyer";
   if (userRole === "seller") userRole = "artist";
 
