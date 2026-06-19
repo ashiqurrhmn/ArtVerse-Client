@@ -17,8 +17,25 @@ export default function ArtworkDetailsPage() {
   const [artwork, setArtwork] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [purchaseStats, setPurchaseStats] = useState(null);
   const { data: session } = authClient.useSession();
   const user = session?.user;
+
+  useEffect(() => {
+    if (!user || user.role !== "buyer") return;
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/purchases/stats/${user.email}`);
+        const data = await res.json();
+        if (data && !data.error) {
+          setPurchaseStats(data);
+        }
+      } catch (err) {
+        console.error("Failed to load purchase stats", err);
+      }
+    };
+    fetchStats();
+  }, [user]);
 
   useEffect(() => {
     if (!id) return;
@@ -98,7 +115,7 @@ export default function ArtworkDetailsPage() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        toast.error("Failed to create checkout session.");
+        toast.error(data.error || data.message || "Failed to create checkout session.", { position: "bottom-center" });
         setIsPurchasing(false);
       }
     } catch (error) {
@@ -238,11 +255,46 @@ export default function ArtworkDetailsPage() {
                   ${artwork.price}
                 </p>
                 
+                {/* Purchase Plan Progress */}
+                {user?.role === "buyer" && purchaseStats && (!artwork.status || artwork.status === "Published") && !isSold && (
+                  <div className="mb-6 p-4 rounded-xl bg-accent/20 border border-separator/40">
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="font-semibold text-foreground capitalize">
+                        {purchaseStats.plan} Plan
+                      </span>
+                      <span className="text-muted-foreground font-medium text-xs">
+                        {purchaseStats.limit === -1 ? "Unlimited Purchases" : `${purchaseStats.count} / ${purchaseStats.limit} Purchased`}
+                      </span>
+                    </div>
+                    {purchaseStats.limit !== -1 && (
+                      <div className="w-full bg-muted/40 rounded-full h-2 overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full transition-all duration-1000 ${purchaseStats.count >= purchaseStats.limit ? 'bg-red-500' : 'bg-primary'}`}
+                          style={{ width: `${Math.min((purchaseStats.count / purchaseStats.limit) * 100, 100)}%` }}
+                        />
+                      </div>
+                    )}
+                    {purchaseStats.limit !== -1 && purchaseStats.count >= purchaseStats.limit && (
+                      <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                        <p className="text-xs text-red-500 font-medium">
+                          You've reached your limit. Upgrade your plan to collect more!
+                        </p>
+                        <Link 
+                          href="/pricing"
+                          className="shrink-0 text-xs font-bold bg-red-500 text-white px-3 py-1.5 rounded-md hover:bg-red-600 transition-colors shadow-sm text-center"
+                        >
+                          Upgrade Plan
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-4">
                   {(!artwork.status || artwork.status === "Published") && !isSold && (
                     <button 
                       onClick={handlePurchase}
-                      disabled={isPurchasing}
+                      disabled={isPurchasing || (purchaseStats && purchaseStats.limit !== -1 && purchaseStats.count >= purchaseStats.limit)}
                       className="w-full sm:flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground px-6 md:px-8 py-3.5 md:py-4 text-sm font-bold text-background transition-all hover:bg-foreground/90 hover:scale-[1.02] shadow-xl shadow-foreground/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
                       {isPurchasing ? (
