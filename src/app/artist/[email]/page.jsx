@@ -10,6 +10,7 @@ import {
   Leaf,
   Palette,
   ShoppingBag,
+  UserX,
 } from "lucide-react";
 import Link from "next/link";
 import { getArtworks } from "@/lib/api/artworks";
@@ -157,6 +158,26 @@ export default function PublicArtistProfilePage() {
             </button>
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  if (profile && (profile.role === "buyer" || profile.role === "admin")) {
+    return (
+      <div className="flex min-h-[80vh] flex-col items-center justify-center p-4 text-center bg-background">
+        <div className="flex size-20 md:size-24 items-center justify-center rounded-full bg-muted/50 mb-6 border border-separator/50 shadow-inner">
+          <UserX className="size-10 md:size-12 text-muted-foreground/60" />
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-3 tracking-tight">Profile Unavailable</h1>
+        <p className="text-muted-foreground mb-8 max-w-md text-base sm:text-lg leading-relaxed">
+          This user does not have a public artist profile available for viewing.
+        </p>
+        <Link
+          href="/browse"
+          className="rounded-2xl bg-foreground px-8 py-4 font-bold text-background transition-all hover:scale-105 hover:bg-foreground/90 shadow-xl shadow-foreground/20"
+        >
+          Explore Gallery
+        </Link>
       </div>
     );
   }
