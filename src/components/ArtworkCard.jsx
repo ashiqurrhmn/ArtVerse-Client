@@ -40,6 +40,15 @@ export default function ArtworkCard({ artwork, index }) {
         >
           ${artwork.price}
         </motion.div>
+
+        {/* Sold Badge */}
+        {artwork.sold && (
+          <div className="absolute left-2 sm:left-3 top-2 sm:top-3 z-20 pointer-events-none">
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2.5 py-1 text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-white shadow-lg">
+              Sold
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Details Section */}

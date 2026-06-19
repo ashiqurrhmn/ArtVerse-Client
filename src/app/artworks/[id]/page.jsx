@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getArtworkById } from "@/lib/api/artworks";
-import { ArrowLeft, Heart, Share2, ImageIcon, ShoppingCart, Calendar, Tag, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Heart, ImageIcon, ShoppingCart, Calendar, Tag, ShieldCheck, BadgeCheck } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
+import { authClient } from "@/lib/auth-client";
 
 export default function ArtworkDetailsPage() {
   const params = useParams();
@@ -15,6 +16,9 @@ export default function ArtworkDetailsPage() {
   
   const [artwork, setArtwork] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
 
   useEffect(() => {
     if (!id) return;
@@ -64,6 +68,48 @@ export default function ArtworkDetailsPage() {
     );
   }
 
+  const handlePurchase = async () => {
+    if (!user) {
+      toast.error("Please sign in to purchase artwork.", { position: "bottom-center" });
+      return;
+    }
+    if (user.role !== "buyer") {
+      toast.error("Only buyers can purchase artworks.", { position: "bottom-center" });
+      return;
+    }
+
+    setIsPurchasing(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/create-checkout-session`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: artwork.title,
+            image: artwork.image,
+            price: artwork.price,
+            _id: artwork._id,
+            buyerEmail: user.email,
+          }),
+        }
+      );
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error("Failed to create checkout session.");
+        setIsPurchasing(false);
+      }
+    } catch (error) {
+      console.error("Purchase error:", error);
+      toast.error("Something went wrong. Please try again.");
+      setIsPurchasing(false);
+    }
+  };
+
+  const isSold = artwork.sold === true;
+
   return (
     <main className="min-h-screen bg-background pb-20 pt-4 md:pt-6">
       
@@ -102,6 +148,15 @@ export default function ArtworkDetailsPage() {
               ) : (
                 <ImageIcon className="size-20 text-muted-foreground/30" />
               )}
+
+              {/* Sold Overlay */}
+              {isSold && (
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-20">
+                  <div className="bg-red-600 text-white px-8 py-3 rounded-full text-lg font-extrabold uppercase tracking-widest shadow-2xl rotate-[-12deg]">
+                    Sold
+                  </div>
+                </div>
+              )}
             </motion.div>
           </div>
 
@@ -129,6 +184,17 @@ export default function ArtworkDetailsPage() {
                   <div>
                     <p className="text-sm font-bold text-red-600 dark:text-red-500">Artwork Rejected</p>
                     <p className="text-xs text-red-600/80 dark:text-red-500/80 mt-0.5">This artwork did not meet the platform guidelines and has been rejected.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Sold Banner */}
+              {isSold && (
+                <div className="mb-6 rounded-2xl bg-emerald-500/10 p-4 border border-emerald-500/20 flex items-start gap-3">
+                  <BadgeCheck className="size-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Artwork Sold</p>
+                    <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">This artwork has been purchased and is no longer available for sale.</p>
                   </div>
                 </div>
               )}
@@ -173,17 +239,35 @@ export default function ArtworkDetailsPage() {
                 </p>
                 
                 <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-4">
-                  {(!artwork.status || artwork.status === "Published") && (
-                    <button className="w-full sm:flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground px-6 md:px-8 py-3.5 md:py-4 text-sm font-bold text-background transition-all hover:bg-foreground/90 hover:scale-[1.02] shadow-xl shadow-foreground/20">
-                      <ShoppingCart className="size-4 md:size-5" />
-                      Purchase Art
+                  {(!artwork.status || artwork.status === "Published") && !isSold && (
+                    <button 
+                      onClick={handlePurchase}
+                      disabled={isPurchasing}
+                      className="w-full sm:flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground px-6 md:px-8 py-3.5 md:py-4 text-sm font-bold text-background transition-all hover:bg-foreground/90 hover:scale-[1.02] shadow-xl shadow-foreground/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    >
+                      {isPurchasing ? (
+                        <>
+                          <span className="size-4 border-2 border-background/30 border-t-background rounded-full animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="size-4 md:size-5" />
+                          Purchase Art
+                        </>
+                      )}
                     </button>
+                  )}
+                  {isSold && (
+                    <div className="w-full sm:flex-1 flex items-center justify-center gap-2 rounded-2xl bg-muted/40 px-6 md:px-8 py-3.5 md:py-4 text-sm font-bold text-muted-foreground border border-separator cursor-not-allowed">
+                      <BadgeCheck className="size-4 md:size-5" />
+                      Sold Out
+                    </div>
                   )}
                   <div className="flex items-center gap-3 w-full sm:w-auto">
                     <button className="flex-1 sm:flex-none flex size-12 md:size-14 items-center justify-center rounded-2xl border-2 border-separator bg-background text-muted-foreground transition-all hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-500">
                       <Heart className="size-5 md:size-6" />
                     </button>
-                    
                   </div>
                 </div>
               </div>
