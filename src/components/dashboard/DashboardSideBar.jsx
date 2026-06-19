@@ -247,16 +247,16 @@ export function DashboardSideBar() {
   ];
 
   const userNavItems = [
-    { icon: ReceiptIcon, label: "Purchase History", href: "/dashboard/user" },
+    { icon: ReceiptIcon, label: "Purchase History", href: "/dashboard/buyer" },
     {
       icon: ImageIcon,
       label: "Bought Artworks",
-      href: "/dashboard/user/artworks",
+      href: "/dashboard/buyer/artworks",
     },
     {
       icon: SettingsIcon,
       label: "Profile Management",
-      href: "/dashboard/user/profile",
+      href: "/dashboard/buyer/profile",
     },
   ];
 

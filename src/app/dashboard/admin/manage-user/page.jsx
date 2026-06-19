@@ -342,9 +342,6 @@ const AdminManageUsers = () => {
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
-                        <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/20 rounded-lg transition-all">
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
                       </div>
                     </td>
                   </tr>
