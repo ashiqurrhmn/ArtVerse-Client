@@ -53,7 +53,7 @@ export default function Banner() {
         >
           <motion.h1 variants={itemVariants} className="text-4xl sm:text-6xl lg:text-8xl font-bold font-serif leading-[1.1] tracking-tight mb-6 drop-shadow-xl">
             Discover & Buy <br className="hidden sm:block" />
-            Original Artworks
+            <span className="text-primary">Original Artworks</span>
           </motion.h1>
           <motion.p variants={itemVariants} className="text-lg sm:text-xl mb-10 max-w-2xl font-medium leading-relaxed">
             Buy, sell, and explore extraordinary artworks.
