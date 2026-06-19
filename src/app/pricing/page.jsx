@@ -3,8 +3,24 @@
 import { Button } from "@heroui/react";
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
+import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 
 export default function PricingPage() {
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+  const isNotBuyer = user && user.role !== "buyer";
+
+  const handleActionClick = () => {
+    if (isNotBuyer) {
+      toast.error("Subscriptions and pricing plans are exclusively for buyers.", {
+        position: "bottom-center",
+      });
+      return;
+    }
+    // Add logic for buyers here later
+  };
+
   const plans = [
     {
       name: "Free (Default)",
@@ -130,13 +146,16 @@ export default function PricingPage() {
               </ul>
 
               <Button
+                onClick={handleActionClick}
                 className={`mt-10 w-full rounded-full font-bold py-6 text-sm transition-all shadow-sm ${
                   plan.popular 
                     ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-md" 
                     : "bg-accent/40 text-foreground hover:bg-accent/60 border border-separator"
-                }`}
+                } ${isNotBuyer ? "opacity-60 cursor-not-allowed hover:-translate-y-0 hover:shadow-sm" : ""}`}
               >
-                {plan.name === "Free (Default)" ? "Current Plan" : `Upgrade to ${plan.name}`}
+                {isNotBuyer 
+                  ? "Only for Buyers" 
+                  : plan.name === "Free (Default)" ? "Current Plan" : `Upgrade to ${plan.name}`}
               </Button>
             </motion.div>
           ))}
@@ -161,8 +180,11 @@ export default function PricingPage() {
               Upgrade your account today to unlock higher purchase limits and exclusive benefits in our art community.
             </p>
 
-            <Button className="mt-10 rounded-full bg-primary hover:bg-primary/90 px-10 py-6 font-bold text-primary-foreground shadow-md transition-all hover:scale-105 active:scale-95 text-base">
-              Get Started
+            <Button 
+              onClick={handleActionClick}
+              className={`mt-10 rounded-full bg-primary px-10 py-6 font-bold text-primary-foreground shadow-md transition-all text-base ${isNotBuyer ? "opacity-60 cursor-not-allowed" : "hover:bg-primary/90 hover:scale-105 active:scale-95"}`}
+            >
+              {isNotBuyer ? "Only for Buyers" : "Get Started"}
             </Button>
           </div>
         </motion.div>
