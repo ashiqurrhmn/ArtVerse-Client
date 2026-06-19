@@ -3,8 +3,62 @@
 import { motion } from "framer-motion";
 import { ImageIcon, Heart } from "lucide-react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 
 export default function ArtworkCard({ artwork, index }) {
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+
+  useEffect(() => {
+    if (!user || !artwork?._id) return;
+    const checkSaved = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/saved-artworks/check/${encodeURIComponent(user.email)}/${artwork._id}`);
+        const data = await res.json();
+        setIsSaved(data.saved);
+      } catch (e) {
+        console.error("Failed to check saved status");
+      }
+    };
+    checkSaved();
+  }, [user, artwork?._id]);
+
+  const toggleSave = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast.error("Please log in to save artworks");
+      return;
+    }
+
+    setIsSaving(true);
+    // Optimistic update
+    setIsSaved(!isSaved);
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/saved-artworks/toggle`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, artworkId: artwork._id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setIsSaved(data.saved);
+      toast.success(data.saved ? "Artwork saved!" : "Removed from saved", { position: "bottom-right", duration: 2000 });
+    } catch (e) {
+      console.error(e);
+      // Revert optimistic update
+      setIsSaved(isSaved);
+      toast.error("Failed to update saved status");
+    } finally {
+      setIsSaving(false);
+    }
+  };
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -98,10 +152,16 @@ export default function ArtworkCard({ artwork, index }) {
             </button>
           </Link>
           <button 
-            className="flex size-8 items-center justify-center rounded-full bg-muted/40 text-muted-foreground transition-colors hover:bg-red-500/15 hover:text-red-500"
-            title="Save artwork"
+            onClick={toggleSave}
+            disabled={isSaving}
+            className={`flex size-8 items-center justify-center rounded-full transition-colors ${
+              isSaved 
+                ? "bg-red-500/15 text-red-500 hover:bg-red-500/25" 
+                : "bg-muted/40 text-muted-foreground hover:bg-red-500/15 hover:text-red-500"
+            }`}
+            title={isSaved ? "Remove from saved" : "Save artwork"}
           >
-            <Heart className="size-4" />
+            <Heart className={`size-4 ${isSaved ? "fill-current" : ""}`} />
           </button>
         </div>
       </div>

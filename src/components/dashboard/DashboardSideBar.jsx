@@ -9,6 +9,7 @@ import { Button, Drawer } from "@heroui/react";
 import { authClient } from "@/lib/auth-client";
 import { ThemeSwitcher } from "../ThemeSwitcher";
 import { useProfile } from "@/context/ProfileContext";
+import { Heart } from "lucide-react";
 
 // --- Icons ---
 const GridIcon = (props) => (
@@ -258,12 +259,17 @@ export function DashboardSideBar() {
     },
   ];
 
-  const userNavItems = [
+    const userNavItems = [
     { icon: ReceiptIcon, label: "Purchase History", href: "/dashboard/buyer" },
     {
       icon: ImageIcon,
       label: "Bought Artworks",
       href: "/dashboard/buyer/artworks",
+    },
+    {
+      icon: Heart,
+      label: "Saved Artwork",
+      href: "/dashboard/buyer/saved",
     },
     {
       icon: SettingsIcon,

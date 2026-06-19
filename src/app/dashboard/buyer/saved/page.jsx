@@ -4,11 +4,12 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ExternalLink, Search, Filter, ImageIcon } from "lucide-react";
+import { ExternalLink, Search, Filter, ImageIcon, Heart } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 
-export default function BoughtArtworksPage() {
-  const [purchases, setPurchases] = useState([]);
+export default function SavedArtworksPage() {
+  const [savedArtworks, setSavedArtworks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
@@ -33,59 +34,72 @@ export default function BoughtArtworksPage() {
       return;
     }
 
-    const fetchPurchases = async () => {
+    const fetchSavedArtworks = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/purchases?email=${encodeURIComponent(user.email)}`,
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/saved-artworks/${encodeURIComponent(user.email)}`,
         );
         const data = await res.json();
-        setPurchases(data || []);
+        setSavedArtworks(data || []);
       } catch (error) {
-        console.error("Failed to fetch purchases", error);
+        console.error("Failed to fetch saved artworks", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchPurchases();
+    fetchSavedArtworks();
   }, [user?.email, session]);
 
-  const filteredPurchases = purchases.filter((purchase) => {
+  const filteredArtworks = savedArtworks.filter((artwork) => {
     const searchString = String(searchTerm).toLowerCase();
-    const title = String(
-      purchase.artworkTitle || purchase.artwork?.title || "",
-    ).toLowerCase();
-    const artist = String(purchase.artwork?.userName || "").toLowerCase();
+    const title = String(artwork?.title || "").toLowerCase();
+    const artist = String(artwork?.userName || "").toLowerCase();
     return title.includes(searchString) || artist.includes(searchString);
   });
 
-  const sortedPurchases = [...filteredPurchases].sort((a, b) => {
+  const sortedArtworks = [...filteredArtworks].sort((a, b) => {
     if (sortBy === "newest") {
-      return (
-        new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime()
-      );
+      // API returns them naturally sorted by savedAt, but JS sorting wants numbers
+      return -1; // Assuming order from array is already newest first
     } else if (sortBy === "oldest") {
-      return (
-        new Date(a.purchasedAt).getTime() - new Date(b.purchasedAt).getTime()
-      );
+      return 1;
     } else if (sortBy === "price-high") {
-      return (Number(b.amount) || 0) - (Number(a.amount) || 0);
+      return (Number(b.price) || 0) - (Number(a.price) || 0);
     } else if (sortBy === "price-low") {
-      return (Number(a.amount) || 0) - (Number(b.amount) || 0);
+      return (Number(a.price) || 0) - (Number(b.price) || 0);
     }
     return 0;
   });
+
+  const handleUnsave = async (artworkId) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/saved-artworks/toggle`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, artworkId }),
+      });
+      if (res.ok) {
+        setSavedArtworks(prev => prev.filter(a => a._id !== artworkId));
+        toast.success("Removed from saved artworks", { position: "bottom-right", duration: 2000 });
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to remove artwork");
+    }
+  };
+
   return (
     <div className="flex-1 w-full p-4 md:p-6 overflow-y-auto">
-      <div className=" space-y-8">
+      <div className="space-y-8">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-              Bought Artworks
+              Saved Artworks
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Your personal collection of purchased masterpieces.
+              Your curated collection of favorite pieces.
             </p>
           </div>
         </div>
@@ -98,7 +112,7 @@ export default function BoughtArtworksPage() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search your collection..."
+              placeholder="Search your saved artworks..."
               className="w-full pl-10 pr-4 py-2.5 bg-background border border-separator rounded-xl text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
             />
           </div>
@@ -147,8 +161,8 @@ export default function BoughtArtworksPage() {
 
         {/* Gallery Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-6">
-            {[...Array(6)].map((_, idx) => (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-6">
+            {[...Array(7)].map((_, idx) => (
               <div
                 key={idx}
                 className="bg-background border border-separator rounded-2xl overflow-hidden shadow-sm animate-pulse flex flex-col"
@@ -167,26 +181,25 @@ export default function BoughtArtworksPage() {
               </div>
             ))}
           </div>
-        ) : purchases.length === 0 ? (
+        ) : savedArtworks.length === 0 ? (
           <div className="py-20 text-center flex flex-col items-center">
             <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mb-4">
               <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
             </div>
             <h3 className="text-xl font-bold text-foreground mb-2">
-              No artworks yet
+              No saved artworks
             </h3>
             <p className="text-muted-foreground max-w-sm">
-              Your collection is currently empty. Visit the browse page to find
-              your next masterpiece.
+              You haven't saved any artworks yet. Browse the gallery and click the heart icon to save your favorites!
             </p>
             <Link
               href="/browse"
               className="mt-6 px-6 py-3 bg-primary text-primary-foreground font-bold rounded-xl hover:brightness-110 transition-all shadow-lg"
             >
-              Browse Artworks
+              Browse Gallery
             </Link>
           </div>
-        ) : sortedPurchases.length === 0 ? (
+        ) : sortedArtworks.length === 0 ? (
           <div className="py-20 text-center flex flex-col items-center">
             <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mb-4">
               <Search className="w-8 h-8 text-muted-foreground/50" />
@@ -199,10 +212,10 @@ export default function BoughtArtworksPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-6">
-            {sortedPurchases.map((purchase, idx) => (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-6">
+            {sortedArtworks.map((artwork, idx) => (
               <motion.div
-                key={purchase._id}
+                key={artwork._id}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: idx * 0.1 }}
@@ -210,14 +223,10 @@ export default function BoughtArtworksPage() {
               >
                 {/* Image Container */}
                 <div className="relative w-full aspect-[4/3] bg-muted/20 overflow-hidden">
-                  {purchase.artwork?.image ? (
+                  {artwork.image ? (
                     <Image
-                      src={purchase.artwork.image}
-                      alt={
-                        purchase.artworkTitle ||
-                        purchase.artwork.title ||
-                        "Artwork"
-                      }
+                      src={artwork.image}
+                      alt={artwork.title || "Artwork"}
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -227,11 +236,21 @@ export default function BoughtArtworksPage() {
                       <ImageIcon className="w-12 h-12 text-muted-foreground/30" />
                     </div>
                   )}
+                  
+                  {/* Unsave button */}
+                  <button
+                    onClick={() => handleUnsave(artwork._id)}
+                    className="absolute top-2 right-2 z-20 p-1.5 bg-background/80 backdrop-blur-md rounded-full text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                    title="Remove from saved"
+                  >
+                    <Heart className="w-4 h-4 fill-current" />
+                  </button>
+
                   {/* Overlay on hover */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
                     <Link
-                      href={`/artworks/${purchase.artworkId}`}
-                      className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-full text-xs md:text-sm font-medium hover:bg-white/30 transition-colors"
+                      href={`/artworks/${artwork._id}`}
+                      className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-full text-xs md:text-sm font-medium hover:bg-white/30 transition-colors pointer-events-auto"
                     >
                       View Details
                       <ExternalLink className="w-3 h-3 md:w-4 md:h-4" />
@@ -243,35 +262,30 @@ export default function BoughtArtworksPage() {
                 <div className="p-3 md:p-5 flex flex-col justify-between flex-1">
                   <div>
                     <h3 className="text-sm md:text-base lg:text-sm xl:text-base font-bold text-foreground mb-0.5 md:mb-1 line-clamp-1">
-                      {purchase.artworkTitle ||
-                        purchase.artwork?.title ||
-                        "Unknown Artwork"}
+                      {artwork.title || "Unknown Artwork"}
                     </h3>
                     <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">
                       By{" "}
-                      {purchase.artwork?.userEmail ? (
+                      {artwork.email ? (
                         <Link
-                          href={`/artist/${purchase.artwork.userEmail}`}
+                          href={`/artist/${artwork.email}`}
                           className="font-medium text-foreground hover:text-primary hover:underline transition-colors"
                         >
-                          {purchase.artwork?.userName || "Unknown Artist"}
+                          {artwork.userName || "Unknown Artist"}
                         </Link>
                       ) : (
                         <span className="font-medium text-foreground">
-                          {purchase.artwork?.userName || "Unknown Artist"}
+                          {artwork.userName || "Unknown Artist"}
                         </span>
                       )}
                     </p>
                   </div>
                   <div className="mt-2 md:mt-4 pt-2 md:pt-4 border-t border-separator flex flex-col xl:flex-row xl:items-center justify-between gap-1 xl:gap-0">
                     <span className="text-sm md:text-base lg:text-sm xl:text-base font-bold text-primary">
-                      ${purchase.amount}
+                      ${artwork.price}
                     </span>
                     <span className="text-[10px] md:text-xs text-muted-foreground truncate">
-                      {new Date(purchase.purchasedAt).toLocaleDateString(
-                        "en-US",
-                        { month: "short", day: "numeric", year: "numeric" },
-                      )}
+                      {artwork.category || "Art"}
                     </span>
                   </div>
                 </div>

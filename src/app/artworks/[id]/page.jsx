@@ -18,8 +18,52 @@ export default function ArtworkDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [purchaseStats, setPurchaseStats] = useState(null);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { data: session } = authClient.useSession();
   const user = session?.user;
+
+  useEffect(() => {
+    if (!user || !id) return;
+    const checkSaved = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/saved-artworks/check/${encodeURIComponent(user.email)}/${id}`);
+        const data = await res.json();
+        setIsSaved(data.saved);
+      } catch (e) {
+        console.error("Failed to check saved status");
+      }
+    };
+    checkSaved();
+  }, [user, id]);
+
+  const toggleSave = async () => {
+    if (!user) {
+      toast.error("Please log in to save artworks");
+      return;
+    }
+
+    setIsSaving(true);
+    setIsSaved(!isSaved);
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/saved-artworks/toggle`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, artworkId: id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setIsSaved(data.saved);
+      toast.success(data.saved ? "Artwork saved!" : "Removed from saved", { position: "bottom-right", duration: 2000 });
+    } catch (e) {
+      console.error(e);
+      setIsSaved(isSaved);
+      toast.error("Failed to update saved status");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!user || user.role !== "buyer") return;
@@ -317,8 +361,16 @@ export default function ArtworkDetailsPage() {
                     </div>
                   )}
                   <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <button className="flex-1 sm:flex-none flex size-12 md:size-14 items-center justify-center rounded-2xl border-2 border-separator bg-background text-muted-foreground transition-all hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-500">
-                      <Heart className="size-5 md:size-6" />
+                    <button 
+                      onClick={toggleSave}
+                      disabled={isSaving}
+                      className={`flex-1 sm:flex-none flex size-12 md:size-14 items-center justify-center rounded-2xl border-2 transition-all ${
+                        isSaved 
+                          ? "border-red-500/30 bg-red-500/10 text-red-500 hover:bg-red-500/20" 
+                          : "border-separator bg-background text-muted-foreground hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-500"
+                      }`}
+                    >
+                      <Heart className={`size-5 md:size-6 ${isSaved ? "fill-current" : ""}`} />
                     </button>
                   </div>
                 </div>
