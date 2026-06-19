@@ -41,6 +41,10 @@ export default function BrowseArtworksPage() {
   }, []);
 
   let filteredArtworks = artworks.filter((artwork) => {
+    // Only show artworks that are either explicitly "Published" or have no status (older posts)
+    if (artwork.status && artwork.status !== "Published") {
+      return false;
+    }
 
     // Search by title or artist (userName)
     const matchesSearch =

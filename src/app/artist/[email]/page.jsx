@@ -3,7 +3,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { MapPin, Link as LinkIcon, Eye, Leaf, Palette, ShoppingBag } from "lucide-react";
+import {
+  MapPin,
+  Link as LinkIcon,
+  Eye,
+  Leaf,
+  Palette,
+  ShoppingBag,
+} from "lucide-react";
 import Link from "next/link";
 import { getArtworks } from "@/lib/api/artworks";
 import ArtworkCard from "@/components/ArtworkCard";
@@ -38,10 +45,9 @@ export default function PublicArtistProfilePage() {
 
         // Fetch artworks
         const artworksData = await getArtworks(email);
-        // Show both Published and reviewing artworks since there's no admin approval yet
-        const publishedArtworks = artworksData.filter(a => 
-          a.status === "Published" || 
-          a.status?.toLowerCase() === "reviewing"
+        // Only show Published artworks (or older artworks with no status)
+        const publishedArtworks = artworksData.filter(
+          (a) => a.status === "Published" || !a.status
         );
         setArtworks(publishedArtworks);
       } catch (error) {
@@ -59,11 +65,12 @@ export default function PublicArtistProfilePage() {
       toast.error("Please login to follow artists");
       return;
     }
-    
+
     setIsFollowingToggle(true);
-    
+
     const followerName = loggedInProfile?.name || currentUser.name;
-    const followerImage = loggedInProfile?.profileImage || currentUser.image || "";
+    const followerImage =
+      loggedInProfile?.profileImage || currentUser.image || "";
     const followerRole = currentUser.role || "user";
 
     try {
@@ -76,31 +83,43 @@ export default function PublicArtistProfilePage() {
           email: currentUser.email,
           name: followerName,
           image: followerImage,
-          role: followerRole
+          role: followerRole,
         }),
       });
 
       if (!res.ok) throw new Error("Failed to toggle follow");
 
       const data = await res.json();
-      
+
       // Update local profile state
       setProfile((prev) => {
         const currentFollowers = prev.followers || [];
         if (data.isFollowing) {
           return {
             ...prev,
-            followers: [...currentFollowers, { email: currentUser.email, name: followerName, image: followerImage, role: followerRole }]
+            followers: [
+              ...currentFollowers,
+              {
+                email: currentUser.email,
+                name: followerName,
+                image: followerImage,
+                role: followerRole,
+              },
+            ],
           };
         } else {
           return {
             ...prev,
-            followers: currentFollowers.filter(f => f.email !== currentUser.email)
+            followers: currentFollowers.filter(
+              (f) => f.email !== currentUser.email,
+            ),
           };
         }
       });
-      
-      toast.success(data.isFollowing ? "Followed artist!" : "Unfollowed artist");
+
+      toast.success(
+        data.isFollowing ? "Followed artist!" : "Unfollowed artist",
+      );
     } catch (error) {
       console.error(error);
       toast.error("Failed to perform action");
@@ -114,7 +133,9 @@ export default function PublicArtistProfilePage() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="size-12 animate-spin rounded-full border-4 border-primary/20 border-t-primary"></div>
-          <p className="text-sm text-muted-foreground animate-pulse">Loading artist profile...</p>
+          <p className="text-sm text-muted-foreground animate-pulse">
+            Loading artist profile...
+          </p>
         </div>
       </div>
     );
@@ -124,8 +145,12 @@ export default function PublicArtistProfilePage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground">Artist Not Found</h2>
-          <p className="text-muted-foreground mt-2">The profile you are looking for does not exist.</p>
+          <h2 className="text-2xl font-bold text-foreground">
+            Artist Not Found
+          </h2>
+          <p className="text-muted-foreground mt-2">
+            The profile you are looking for does not exist.
+          </p>
           <Link href="/browse">
             <button className="mt-6 rounded-full bg-primary px-6 py-2 font-medium text-primary-foreground hover:opacity-90">
               Browse Artworks
@@ -137,7 +162,12 @@ export default function PublicArtistProfilePage() {
   }
 
   const userName = profile?.name || "Unknown Artist";
-  const userInitials = userName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const userInitials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
   const profileImage = profile?.profileImage;
   const coverImage = profile?.coverImage;
 
@@ -147,7 +177,11 @@ export default function PublicArtistProfilePage() {
       <div className="relative h-[250px] md:h-[350px] w-full bg-muted/30 overflow-hidden">
         {coverImage ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={coverImage} alt="Cover" className="h-full w-full object-cover" />
+          <img
+            src={coverImage}
+            alt="Cover"
+            className="h-full w-full object-cover"
+          />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-background" />
         )}
@@ -156,7 +190,6 @@ export default function PublicArtistProfilePage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 sm:-mt-24 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
           {/* Left Column: Profile Card */}
           <div className="lg:col-span-1 space-y-6">
             <motion.div
@@ -168,7 +201,11 @@ export default function PublicArtistProfilePage() {
                 <div className="relative mb-6 size-32 sm:size-40 shrink-0 rounded-full border-4 border-background bg-muted shadow-xl overflow-hidden">
                   {profileImage ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={profileImage} alt={userName} className="h-full w-full object-cover" />
+                    <img
+                      src={profileImage}
+                      alt={userName}
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-primary/10 text-4xl font-bold text-primary">
                       {userInitials}
@@ -176,7 +213,9 @@ export default function PublicArtistProfilePage() {
                   )}
                 </div>
 
-                <h1 className="text-2xl font-bold text-foreground">{userName}</h1>
+                <h1 className="text-2xl font-bold text-foreground">
+                  {userName}
+                </h1>
                 <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
                   <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
                     Artist
@@ -188,7 +227,9 @@ export default function PublicArtistProfilePage() {
                     onClick={handleFollowToggle}
                     disabled={isFollowingToggle}
                     className={`mt-4 w-full max-w-[200px] rounded-full px-6 py-2 text-sm font-semibold transition-all ${
-                      profile?.followers?.some(f => f.email === currentUser.email)
+                      profile?.followers?.some(
+                        (f) => f.email === currentUser.email,
+                      )
                         ? "bg-muted text-foreground border border-separator hover:bg-muted/80"
                         : "bg-primary text-primary-foreground hover:opacity-90"
                     } disabled:opacity-50`}
@@ -197,7 +238,9 @@ export default function PublicArtistProfilePage() {
                       <span className="flex items-center justify-center gap-2">
                         <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
                       </span>
-                    ) : profile?.followers?.some(f => f.email === currentUser.email) ? (
+                    ) : profile?.followers?.some(
+                        (f) => f.email === currentUser.email,
+                      ) ? (
                       "Following"
                     ) : (
                       "Follow"
@@ -207,13 +250,21 @@ export default function PublicArtistProfilePage() {
 
                 <div className="mt-6 flex justify-center gap-8 border-y border-separator/60 py-5 w-full">
                   <div className="text-center">
-                    <p className="text-xl font-bold text-foreground">{profile?.followers?.length || 0}</p>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1">Followers</p>
+                    <p className="text-xl font-bold text-foreground">
+                      {profile?.followers?.length || 0}
+                    </p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1">
+                      Followers
+                    </p>
                   </div>
                   <div className="w-px bg-separator/60"></div>
                   <div className="text-center">
-                    <p className="text-xl font-bold text-foreground">{profile?.itemsSold || 0}</p>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1">Items Sold</p>
+                    <p className="text-xl font-bold text-foreground">
+                      {profile?.itemsSold || 0}
+                    </p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1">
+                      Items Sold
+                    </p>
                   </div>
                 </div>
 
@@ -226,42 +277,46 @@ export default function PublicArtistProfilePage() {
                     <MapPin className="size-4 mr-3" />
                     <span>{profile?.location || "Location not set"}</span>
                   </div>
-                  
+
                   {profile?.website && (
                     <div className="flex items-center text-muted-foreground">
                       <LinkIcon className="size-4 mr-3" />
-                      <a 
-                        href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
+                      <a
+                        href={
+                          profile.website.startsWith("http")
+                            ? profile.website
+                            : `https://${profile.website}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="hover:text-primary transition-colors truncate"
                       >
                         {profile.website}
                       </a>
                     </div>
                   )}
-                  
+
                   {profile?.twitter && (
                     <div className="flex items-center text-muted-foreground">
                       <span className="size-4 mr-3 font-bold">X</span>
-                      <a 
-                        href={`https://twitter.com/${profile.twitter.replace(/^@/, '')}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
+                      <a
+                        href={`https://twitter.com/${profile.twitter.replace(/^@/, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="hover:text-primary transition-colors truncate"
                       >
                         {profile.twitter}
                       </a>
                     </div>
                   )}
-                  
+
                   {profile?.instagram && (
                     <div className="flex items-center text-muted-foreground">
                       <span className="size-4 mr-3 font-bold">IG</span>
-                      <a 
-                        href={`https://instagram.com/${profile.instagram.replace(/^@/, '')}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
+                      <a
+                        href={`https://instagram.com/${profile.instagram.replace(/^@/, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="hover:text-primary transition-colors truncate"
                       >
                         {profile.instagram}
@@ -283,7 +338,9 @@ export default function PublicArtistProfilePage() {
                 transition={{ delay: 0.1 }}
                 className="rounded-3xl border border-separator/60 bg-background/50 backdrop-blur-xl p-6 md:p-8"
               >
-                <h3 className="text-lg font-bold text-foreground mb-4">About the Artist</h3>
+                <h3 className="text-lg font-bold text-foreground mb-4">
+                  About the Artist
+                </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                   {profile.about}
                 </p>
@@ -297,22 +354,31 @@ export default function PublicArtistProfilePage() {
               transition={{ delay: 0.2 }}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-foreground">Portfolio</h3>
+                <h3 className="text-2xl font-bold text-foreground">
+                  Portfolio
+                </h3>
                 <span className="text-sm font-medium text-muted-foreground bg-muted/50 px-3 py-1 rounded-full">
-                  {artworks.length} {artworks.length === 1 ? 'Artwork' : 'Artworks'}
+                  {artworks.length}{" "}
+                  {artworks.length === 1 ? "Artwork" : "Artworks"}
                 </span>
               </div>
-              
+
               {artworks.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {artworks.map((artwork, index) => (
-                    <ArtworkCard key={artwork._id} artwork={artwork} index={index} />
+                    <ArtworkCard
+                      key={artwork._id}
+                      artwork={artwork}
+                      index={index}
+                    />
                   ))}
                 </div>
               ) : (
                 <div className="rounded-3xl border border-separator/60 border-dashed bg-background/30 p-12 text-center">
                   <Palette className="mx-auto size-10 text-muted-foreground/40 mb-4" />
-                  <h3 className="text-lg font-bold text-foreground">No artworks yet</h3>
+                  <h3 className="text-lg font-bold text-foreground">
+                    No artworks yet
+                  </h3>
                   <p className="mt-2 text-sm text-muted-foreground">
                     This artist hasn't published any artworks yet.
                   </p>
@@ -320,7 +386,6 @@ export default function PublicArtistProfilePage() {
               )}
             </motion.div>
           </div>
-
         </div>
       </div>
     </div>
