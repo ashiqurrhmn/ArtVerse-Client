@@ -1,28 +1,71 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Trash2, Image as ImageIcon, ArrowUpDown } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { Modal, Button, Skeleton } from "@heroui/react";
 
 const AdminManageArtworks = () => {
-    // mock data
-    const [artworks] = useState([
-        { id: 1, title: "Starry Night Reflection", artist: "Vincent V.", price: 1200, image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=500&q=80" },
-        { id: 2, title: "Modern Abstract I", artist: "Jane Doe", price: 850, image: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=500&q=80" },
-        { id: 3, title: "Ocean Breeze", artist: "Bob Ross", price: 450, image: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=500&q=80" },
-        { id: 4, title: "Urban Jungle", artist: "Chris P.", price: 2100, image: "https://images.unsplash.com/photo-1561214115-f2f1146f56ba?w=500&q=80" },
-        { id: 5, title: "Golden Hours", artist: "Alice W.", price: 300, image: "https://images.unsplash.com/photo-1508344928928-7165b67de128?w=500&q=80" },
-    ]);
-
+    const [artworks, setArtworks] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('default');
+    
+    const [isOpen, setIsOpen] = useState(false);
+    const [artworkToDelete, setArtworkToDelete] = useState(null);
+
+    useEffect(() => {
+        fetchArtworks();
+    }, []);
+
+    const fetchArtworks = async () => {
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/artworks`);
+            if (!res.ok) throw new Error("Failed to fetch artworks");
+            const data = await res.json();
+            setArtworks(data);
+        } catch (error) {
+            console.error("Error fetching artworks:", error);
+            toast.error("Failed to load artworks");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const confirmDelete = (art) => {
+        setArtworkToDelete(art);
+        setIsOpen(true);
+    };
+
+    const handleDeleteArtwork = async () => {
+        if (!artworkToDelete) return;
+        
+        const loadingToast = toast.loading("Deleting artwork...");
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/artworks/${artworkToDelete._id}`, {
+                method: 'DELETE',
+            });
+            
+            if (!res.ok) throw new Error("Failed to delete artwork");
+            
+            setArtworks(prev => prev.filter(art => art._id !== artworkToDelete._id));
+            toast.success("Artwork deleted successfully", { id: loadingToast });
+            setIsOpen(false);
+            setArtworkToDelete(null);
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to delete artwork", { id: loadingToast });
+        }
+    };
 
     const filteredArtworks = artworks.filter(art => {
-        return art.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-               art.artist.toLowerCase().includes(searchQuery.toLowerCase());
+        const titleMatch = (art.title || '').toLowerCase().includes(searchQuery.toLowerCase());
+        const artistMatch = (art.userName || art.artist || '').toLowerCase().includes(searchQuery.toLowerCase());
+        return titleMatch || artistMatch;
     });
 
     const sortedArtworks = [...filteredArtworks].sort((a, b) => {
-        if (sortBy === 'price-asc') return a.price - b.price;
-        if (sortBy === 'price-desc') return b.price - a.price;
+        if (sortBy === 'price-asc') return (a.price || 0) - (b.price || 0);
+        if (sortBy === 'price-desc') return (b.price || 0) - (a.price || 0);
         return 0;
     });
 
@@ -76,18 +119,47 @@ const AdminManageArtworks = () => {
                                 <th className="px-6 py-4">Artwork</th>
                                 <th className="px-6 py-4">Artist</th>
                                 <th className="px-6 py-4">Price</th>
+                                <th className="px-6 py-4">Upload Date</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-separator block md:table-row-group">
-                            {sortedArtworks.length > 0 ? (
+                            {isLoading ? (
+                                Array.from({ length: 5 }).map((_, idx) => (
+                                    <tr key={`skeleton-${idx}`} className="block md:table-row border-b border-separator/30 p-4 md:p-0">
+                                        <td className="block md:table-cell px-2 py-3 md:px-6 md:py-4">
+                                            <div className="flex items-center gap-4">
+                                                <Skeleton className="w-16 h-16 md:w-12 md:h-12 rounded-lg shrink-0" />
+                                                <div className="flex-1 space-y-2 min-w-0">
+                                                    <Skeleton className="h-4 w-32 rounded-lg" />
+                                                    <Skeleton className="h-3 w-24 rounded-lg md:hidden" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="hidden md:table-cell px-2 py-3 md:px-6 md:py-4">
+                                            <Skeleton className="h-4 w-24 rounded-lg" />
+                                        </td>
+                                        <td className="hidden md:table-cell px-2 py-3 md:px-6 md:py-4">
+                                            <Skeleton className="h-5 w-16 rounded-md" />
+                                        </td>
+                                        <td className="hidden md:table-cell px-2 py-3 md:px-6 md:py-4">
+                                            <Skeleton className="h-5 w-24 rounded-md" />
+                                        </td>
+                                        <td className="hidden md:table-cell px-2 py-3 md:px-6 md:py-4 md:text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <Skeleton className="w-20 h-8 rounded-lg" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : sortedArtworks.length > 0 ? (
                                 sortedArtworks.map((art) => (
-                                    <tr key={art.id} className="block md:table-row hover:bg-muted/10 transition-colors group p-4 md:p-0">
+                                    <tr key={art._id || art.id} className="block md:table-row hover:bg-muted/10 transition-colors group p-4 md:p-0">
                                         <td className="block md:table-cell px-2 py-3 md:px-6 md:py-4">
                                             <div className="flex items-center gap-4">
                                                 <div className="relative shrink-0">
-                                                    {art.image ? (
-                                                        <img src={art.image} alt={art.title} className="w-16 h-16 md:w-12 md:h-12 rounded-lg object-cover border-2 border-separator shadow-sm" />
+                                                    {art.images?.[0] || art.image ? (
+                                                        <img src={art.images?.[0] || art.image} alt={art.title} className="w-16 h-16 md:w-12 md:h-12 rounded-lg object-cover border-2 border-separator shadow-sm" />
                                                     ) : (
                                                         <div className="w-16 h-16 md:w-12 md:h-12 rounded-lg bg-muted flex items-center justify-center border-2 border-separator shadow-sm">
                                                             <ImageIcon className="w-6 h-6 text-muted-foreground" />
@@ -96,24 +168,38 @@ const AdminManageArtworks = () => {
                                                 </div>
                                                 <div>
                                                     <div className="font-semibold text-foreground text-base md:text-sm">{art.title}</div>
-                                                    <div className="text-sm text-muted-foreground mt-0.5 md:hidden">By {art.artist}</div>
+                                                    <div className="text-sm text-muted-foreground mt-0.5 md:hidden">By {art.userName || art.artist}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="flex items-center justify-between md:table-cell px-2 py-3 md:px-6 md:py-4 border-t border-separator/30 md:border-none mt-3 md:mt-0 pt-4 md:pt-4">
                                             <span className="md:hidden text-xs font-semibold text-muted-foreground uppercase">Artist</span>
-                                            <div className="font-medium text-foreground text-sm">{art.artist}</div>
+                                            <div className="font-medium text-foreground text-sm">{art.userName || art.artist}</div>
                                         </td>
                                         <td className="flex items-center justify-between md:table-cell px-2 py-3 md:px-6 md:py-4">
                                             <span className="md:hidden text-xs font-semibold text-muted-foreground uppercase">Price</span>
                                             <div className="font-bold text-primary">
-                                                ${art.price.toLocaleString()}
+                                                ${(art.price || 0).toLocaleString()}
+                                            </div>
+                                        </td>
+                                        <td className="flex items-center justify-between md:table-cell px-2 py-3 md:px-6 md:py-4">
+                                            <span className="md:hidden text-xs font-semibold text-muted-foreground uppercase">Upload Date</span>
+                                            <div className="font-medium text-muted-foreground text-sm">
+                                                {art._id ? new Date(parseInt(art._id.substring(0, 8), 16) * 1000).toLocaleDateString(undefined, {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric'
+                                                }) : 'N/A'}
                                             </div>
                                         </td>
                                         <td className="flex items-center justify-between md:table-cell px-2 py-3 md:px-6 md:py-4 md:text-right">
                                             <span className="md:hidden text-xs font-semibold text-muted-foreground uppercase">Actions</span>
                                             <div className="flex items-center justify-end gap-2 opacity-100 transition-opacity">
-                                                <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-all border border-transparent hover:border-red-500/20" title="Delete Artwork">
+                                                <button 
+                                                    onClick={() => confirmDelete(art)}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-all border border-transparent hover:border-red-500/20" 
+                                                    title="Delete Artwork"
+                                                >
                                                     <Trash2 className="w-4 h-4" />
                                                     <span className="md:hidden">Delete</span>
                                                 </button>
@@ -123,7 +209,7 @@ const AdminManageArtworks = () => {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-12 text-center block md:table-cell">
+                                    <td colSpan="5" className="px-6 py-12 text-center block md:table-cell">
                                         <div className="flex flex-col items-center justify-center text-muted-foreground">
                                             <ImageIcon className="w-12 h-12 mb-3 opacity-20" />
                                             <p>No artworks found matching your search.</p>
@@ -150,6 +236,42 @@ const AdminManageArtworks = () => {
                     </div>
                 </div>
             </div>
+
+            <Modal isOpen={isOpen} onOpenChange={setIsOpen}>
+                <Modal.Backdrop className="bg-black/50 backdrop-blur-sm">
+                    <Modal.Container placement="center">
+                        <Modal.Dialog className="bg-background border border-separator shadow-2xl rounded-3xl p-4 md:p-6 text-foreground max-w-sm w-full mx-auto">
+                            <Modal.Header className="flex flex-col items-center justify-center pt-4 pb-2">
+                                <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 shadow-sm">
+                                    <Trash2 className="w-6 h-6 text-red-500" strokeWidth={1.5} />
+                                </div>
+                                <Modal.Heading className="text-xl font-bold text-foreground">Delete Artwork</Modal.Heading>
+                            </Modal.Header>
+                            <Modal.Body className="text-center px-4 py-0">
+                                <p className="text-muted-foreground text-sm leading-relaxed">
+                                    Are you sure you want to delete the artwork <strong>{artworkToDelete?.title || 'Unknown'}</strong>? This action is permanent and cannot be undone.
+                                </p>
+                            </Modal.Body>
+                            <Modal.Footer className="flex flex-row justify-center gap-3 pt-8 pb-2">
+                                <Button 
+                                    variant="bordered" 
+                                    onPress={() => setIsOpen(false)} 
+                                    className="flex-1 font-semibold border border-separator text-foreground bg-transparent hover:bg-muted/30 rounded-2xl py-6 transition-colors"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button 
+                                    color="danger" 
+                                    onPress={() => handleDeleteArtwork()}
+                                    className="flex-1 font-semibold bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/30 rounded-2xl py-6 border border-transparent transition-colors"
+                                >
+                                    Yes, Delete
+                                </Button>
+                            </Modal.Footer>
+                        </Modal.Dialog>
+                    </Modal.Container>
+                </Modal.Backdrop>
+            </Modal>
         </div>
     );
 };

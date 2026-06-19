@@ -19,7 +19,7 @@ const AdminManageUsers = () => {
 
     const fetchUsers = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/users');
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/users`);
             if (!res.ok) throw new Error("Failed to fetch");
             const data = await res.json();
             setUsers(data);
@@ -34,7 +34,7 @@ const AdminManageUsers = () => {
     const handleRoleChange = async (userId, newRole) => {
         const loadingToast = toast.loading("Updating role...");
         try {
-            const res = await fetch(`http://localhost:5000/api/users/${userId}/role`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${userId}/role`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ role: newRole })
@@ -60,7 +60,7 @@ const AdminManageUsers = () => {
         
         const loadingToast = toast.loading("Deleting user...");
         try {
-            const res = await fetch(`http://localhost:5000/api/users/${userToDelete._id}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${userToDelete._id}`, {
                 method: 'DELETE',
             });
             
@@ -289,36 +289,36 @@ const AdminManageUsers = () => {
             <Modal isOpen={isOpen} onOpenChange={setIsOpen}>
                 <Modal.Backdrop className="bg-black/50 backdrop-blur-sm">
                     <Modal.Container placement="center">
-                        <Modal.Dialog className="bg-[#F8F6F0] border border-black/5 shadow-2xl rounded-3xl p-4 md:p-6 text-foreground max-w-sm w-full mx-auto">
-                        <Modal.Header className="flex flex-col items-center justify-center pt-4 pb-2">
-                            <div className="w-14 h-14 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mb-4 shadow-sm">
-                                <Trash2 className="w-6 h-6 text-red-500" strokeWidth={1.5} />
-                            </div>
-                            <Modal.Heading className="text-xl font-bold text-gray-800">Delete User</Modal.Heading>
-                        </Modal.Header>
-                        <Modal.Body className="text-center px-4 py-0">
-                            <p className="text-[#6C7063] text-sm leading-relaxed">
-                                Are you sure you want to delete the user <strong>{userToDelete?.profileName || userToDelete?.name || 'this user'}</strong>? This action is permanent and cannot be undone.
-                            </p>
-                        </Modal.Body>
-                        <Modal.Footer className="flex flex-row justify-center gap-3 pt-8 pb-2">
-                            <Button 
-                                variant="bordered" 
-                                onPress={() => setIsOpen(false)} 
-                                className="flex-1 font-semibold border border-black/10 text-gray-700 bg-transparent hover:bg-black/5 rounded-2xl py-6"
-                            >
-                                Cancel
-                            </Button>
-                            <Button 
-                                color="danger" 
-                                onPress={() => handleDeleteUser()}
-                                className="flex-1 font-semibold bg-[#FE2C45] text-white shadow-lg shadow-red-500/30 rounded-2xl py-6 border border-transparent"
-                            >
-                                Yes, Delete
-                            </Button>
-                        </Modal.Footer>
-                    </Modal.Dialog>
-                </Modal.Container>
+                        <Modal.Dialog className="bg-background border border-separator shadow-2xl rounded-3xl p-4 md:p-6 text-foreground max-w-sm w-full mx-auto">
+                            <Modal.Header className="flex flex-col items-center justify-center pt-4 pb-2">
+                                <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 shadow-sm">
+                                    <Trash2 className="w-6 h-6 text-red-500" strokeWidth={1.5} />
+                                </div>
+                                <Modal.Heading className="text-xl font-bold text-foreground">Delete User</Modal.Heading>
+                            </Modal.Header>
+                            <Modal.Body className="text-center px-4 py-0">
+                                <p className="text-muted-foreground text-sm leading-relaxed">
+                                    Are you sure you want to delete the user <strong>{userToDelete?.profileName || userToDelete?.name || 'this user'}</strong>? This action is permanent and cannot be undone.
+                                </p>
+                            </Modal.Body>
+                            <Modal.Footer className="flex flex-row justify-center gap-3 pt-8 pb-2">
+                                <Button 
+                                    variant="bordered" 
+                                    onPress={() => setIsOpen(false)} 
+                                    className="flex-1 font-semibold border border-separator text-foreground bg-transparent hover:bg-muted/30 rounded-2xl py-6 transition-colors"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button 
+                                    color="danger" 
+                                    onPress={() => handleDeleteUser()}
+                                    className="flex-1 font-semibold bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/30 rounded-2xl py-6 border border-transparent transition-colors"
+                                >
+                                    Yes, Delete
+                                </Button>
+                            </Modal.Footer>
+                        </Modal.Dialog>
+                    </Modal.Container>
                 </Modal.Backdrop>
             </Modal>
         </div>
