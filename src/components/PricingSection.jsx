@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Button } from "@heroui/react";
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
@@ -11,8 +12,19 @@ export default function PricingSection() {
   const user = session?.user;
   const isNotBuyer = user && user.role !== "buyer";
 
-  const handleActionClick = () => {
+  // Fetch plan directly from DB to bypass JWT cookie cache
+  const [userPlan, setUserPlan] = useState("free");
+
+  useEffect(() => {
+    fetch("/api/user/plan")
+      .then((res) => res.json())
+      .then((data) => setUserPlan(data.plan || "free"))
+      .catch(() => setUserPlan("free"));
+  }, [session]);
+
+  const handleActionClick = (e) => {
     if (isNotBuyer) {
+      if (e) e.preventDefault();
       toast.error(
         "Subscriptions and pricing plans are exclusively for buyers.",
         {
@@ -27,8 +39,9 @@ export default function PricingSection() {
   const plans = [
     {
       name: "Free",
+      id: "free",
       price: "$0",
-      period: "",
+      period: "/forever",
       description: "Start exploring and purchasing artworks.",
       features: [
         "Up to 3 paintings purchases allowed",
@@ -39,8 +52,9 @@ export default function PricingSection() {
     },
     {
       name: "Pro",
+      id: "pro",
       price: "$9.99",
-      period: "",
+      period: "/month",
       description: "Perfect for art enthusiasts wanting more.",
       features: [
         "Up to 9 paintings purchases allowed",
@@ -51,8 +65,9 @@ export default function PricingSection() {
     },
     {
       name: "Premium",
+      id: "premium",
       price: "$19.99",
-      period: "",
+      period: "/month",
       description: "For serious collectors and buyers.",
       features: [
         "Unlimited paintings purchases",
@@ -113,86 +128,102 @@ export default function PricingSection() {
           viewport={{ once: true, amount: 0.1 }}
           className="grid gap-8 lg:grid-cols-3 lg:items-center"
         >
-          {plans.map((plan) => (
-            <motion.div
-              variants={itemVariants}
-              key={plan.name}
-              className={`relative rounded-[2rem] border bg-background/80 p-8 shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 ${
-                plan.popular
-                  ? "border-primary ring-2 ring-primary/30 shadow-lg lg:scale-105 bg-background z-10"
-                  : "border-separator"
-              }`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-primary px-5 py-1.5 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-sm">
-                  Most Popular
-                </div>
-              )}
+          {plans.map((plan) => {
+            const planOrder = { free: 0, pro: 1, premium: 2 };
+            const userPlanLevel = planOrder[userPlan.toLowerCase()] ?? 0;
+            const currentPlanLevel = planOrder[plan.id.toLowerCase()] ?? 0;
 
-              <h3 className="text-2xl font-serif font-bold text-foreground">
-                {plan.name}
-              </h3>
+            const isCurrentPlan = userPlanLevel === currentPlanLevel;
+            const isDowngrade = userPlanLevel > currentPlanLevel;
+            const isDisabled = isCurrentPlan || isDowngrade;
 
-              <p className="mt-3 text-muted-foreground text-sm leading-relaxed">
-                {plan.description}
-              </p>
-
-              <div className="mt-8 flex items-baseline gap-1">
-                <span className="text-5xl font-bold tracking-tight text-foreground">
-                  {plan.price}
-                </span>
-                {plan.period && (
-                  <span className="text-muted-foreground font-medium">
-                    {plan.period}
-                  </span>
+            return (
+              <motion.div
+                variants={itemVariants}
+                key={plan.name}
+                className={`relative rounded-[2rem] border bg-background/80 p-8 shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 ${
+                  plan.popular
+                    ? "border-primary ring-2 ring-primary/30 shadow-lg lg:scale-105 bg-background z-10"
+                    : "border-separator"
+                }`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-primary px-5 py-1.5 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-sm">
+                    Most Popular
+                  </div>
                 )}
-              </div>
 
-              <ul className="mt-8 space-y-4">
-                {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-center gap-3 text-sm text-foreground/90 font-medium"
-                  >
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/50 text-primary">
-                      <Check className="h-4 w-4" />
-                    </div>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
+                <h3 className="text-2xl font-serif font-bold text-foreground">
+                  {plan.name}
+                </h3>
 
-              <form action="/api/checkout_sessions" method="POST">
-                <section>
-                  <Button
-                    type="submit"
-                    role="link"
-                    onClick={
-                      plan.name === "Free" ? undefined : handleActionClick
-                    }
-                    disabled={plan.name === "Free"}
-                    className={`mt-10 w-full rounded-full font-bold py-6 text-sm transition-all shadow-sm ${
-                      plan.popular
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-md"
-                        : "bg-accent/40 text-foreground hover:bg-accent/60 border border-separator"
-                    } ${
-                      isNotBuyer || plan.name === "Free"
-                        ? "opacity-60 cursor-not-allowed hover:-translate-y-0 hover:shadow-sm"
-                        : ""
-                    }`}
-                  >
-                     {isNotBuyer
-                  ? "Only for Buyers"
-                  : plan.name === "Free"
-                    ? "Current Plan"
-                    : `Upgrade to ${plan.name}`}
-                  </Button>
-                </section>
-              </form>
+                <p className="mt-3 text-muted-foreground text-sm leading-relaxed">
+                  {plan.description}
+                </p>
 
-             
-            </motion.div>
-          ))}
+                <div className="mt-8 flex items-baseline gap-1">
+                  <span className="text-5xl font-bold tracking-tight text-foreground">
+                    {plan.price}
+                  </span>
+                  {plan.period && (
+                    <span className="text-muted-foreground font-medium">
+                      {plan.period}
+                    </span>
+                  )}
+                </div>
+
+                <ul className="mt-8 space-y-4">
+                  {plan.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-center gap-3 text-sm text-foreground/90 font-medium"
+                    >
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/50 text-primary">
+                        <Check className="h-4 w-4" />
+                      </div>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <form action="/api/checkout_sessions" method="POST">
+                  <input type="hidden" name="planId" value={plan.id} />
+                  <section>
+                    <Button
+                      type={isDisabled || isNotBuyer ? "button" : "submit"}
+                      role="link"
+                      onClick={(e) => {
+                        if (isDisabled) {
+                          e.preventDefault();
+                          return;
+                        }
+                        handleActionClick(e);
+                      }}
+                      isDisabled={isDisabled}
+                      disabled={isDisabled}
+                      className={`mt-10 w-full rounded-full font-bold py-6 text-sm transition-all shadow-sm ${
+                        plan.popular
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-md"
+                          : "bg-accent/40 text-foreground hover:bg-accent/60 border border-separator"
+                      } ${
+                        isNotBuyer || isDisabled
+                          ? "opacity-60 cursor-not-allowed hover:-translate-y-0 hover:shadow-sm"
+                          : ""
+                      }`}
+                    >
+                      {isNotBuyer
+                        ? "Only for Buyers"
+                        : isCurrentPlan
+                          ? "Current Plan"
+                          : isDowngrade
+                            ? "Included in Plan"
+                            : `Upgrade to ${plan.name}`}
+                    </Button>
+                  </section>
+                </form>
+              </motion.div>
+            );
+          })}
         </motion.div>
       </section>
 

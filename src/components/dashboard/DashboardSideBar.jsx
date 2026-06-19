@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -167,7 +167,19 @@ export function DashboardSideBar() {
   const { profile } = useProfile();
   const userName = profile?.name || user?.name ||"Artist";
   const userImage = profile?.profileImage || user?.image ;
-  const userPlan = user?.plan || "free";
+  
+  const [dbPlan, setDbPlan] = useState("free");
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetch("/api/user/plan")
+        .then((res) => res.json())
+        .then((data) => setDbPlan(data.plan || "free"))
+        .catch(() => setDbPlan("free"));
+    }
+  }, [isAuthenticated, session]);
+
+  const userPlan = dbPlan;
   const normalizedPlan = userPlan.toLowerCase();
   const isPremium =
     normalizedPlan.includes("premium") ||
