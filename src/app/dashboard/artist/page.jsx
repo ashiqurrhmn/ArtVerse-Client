@@ -108,7 +108,7 @@ export default function ArtistDashboard() {
   }
 
   return (
-    <div className="min-h-full text-foreground px-4 md:px-10 pb-16">
+    <div className="min-h-full text-foreground px-4 md:px-6 pb-16">
       
       {/* ── Page Header ── */}
       <div className="mb-8">

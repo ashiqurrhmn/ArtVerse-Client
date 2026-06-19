@@ -71,7 +71,7 @@ export default function SalesHistoryPage() {
   const totalRevenue = mockSales.reduce((acc, sale) => acc + sale.amount, 0);
 
   return (
-    <div className="min-h-full text-foreground px-4 md:px-10 pb-16">
+    <div className="min-h-full text-foreground px-4 md:px-6 pb-16">
       
       {/* ── Page Header ── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-8">

@@ -93,7 +93,7 @@ export default function AddArtworkPage() {
         category: data.category,
         price: data.price,
         image: imageUrl,
-        status: "Published",
+        status: "Reviewing",
         userName: user?.name,
         email: user?.email,
         date: new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }),
@@ -118,7 +118,7 @@ export default function AddArtworkPage() {
 
 
   return (
-    <div className="min-h-full text-foreground px-10 pb-16">
+    <div className="min-h-full text-foreground px-6 pb-16">
       {/* Header */}
       <div className="mb-8">
         <Link

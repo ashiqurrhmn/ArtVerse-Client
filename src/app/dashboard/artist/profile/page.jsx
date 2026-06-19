@@ -188,7 +188,7 @@ export default function ArtistProfilePage() {
   ];
 
   return (
-    <div className="space-y-6 px-10">
+    <div className="space-y-6 px-6">
       {/* Hidden File Inputs */}
       <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={handleAvatarChange} />
       <input type="file" ref={coverInputRef} className="hidden" accept="image/*" onChange={handleCoverChange} />
