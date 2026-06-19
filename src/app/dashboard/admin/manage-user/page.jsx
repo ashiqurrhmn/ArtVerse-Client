@@ -1,43 +1,109 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, MoreVertical, Edit2, Trash2, Shield, User, Paintbrush, ChevronDown, Filter } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { Modal, Button, Skeleton } from "@heroui/react";
 
-const AdminDashboard = () => {
-    // mock data
-    const [users] = useState([
-        { id: 1, name: "Alice Wonderland", email: "alice@example.com", role: "user", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d", status: "Active" },
-        { id: 2, name: "Bob Ross", email: "bob@ross.com", role: "artist", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d", status: "Active" },
-        { id: 3, name: "Charlie Admin", email: "charlie@admin.com", role: "admin", avatar: "https://i.pravatar.cc/150?u=a04258114e29026702d", status: "Offline" },
-        { id: 4, name: "Diana Prince", email: "diana@themyscira.com", role: "user", avatar: "https://i.pravatar.cc/150?u=a048581f4e29026701d", status: "Active" },
-        { id: 5, name: "Edward Scissorhands", email: "edward@scissors.com", role: "artist", avatar: "https://i.pravatar.cc/150?u=a04258114e29026708c", status: "Offline" },
-    ]);
-
+const AdminManageUsers = () => {
+    const [users, setUsers] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [filterRole, setFilterRole] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+    
+    const [isOpen, setIsOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState(null);
+
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
+    const fetchUsers = async () => {
+        try {
+            const res = await fetch('http://localhost:5000/api/users');
+            if (!res.ok) throw new Error("Failed to fetch");
+            const data = await res.json();
+            setUsers(data);
+        } catch (error) {
+            console.error("Error fetching users:", error);
+            toast.error("Failed to load users");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleRoleChange = async (userId, newRole) => {
+        const loadingToast = toast.loading("Updating role...");
+        try {
+            const res = await fetch(`http://localhost:5000/api/users/${userId}/role`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: newRole })
+            });
+            
+            if (!res.ok) throw new Error("Failed to update role");
+            
+            setUsers(prev => prev.map(u => u._id === userId ? { ...u, role: newRole } : u));
+            toast.success(`Role changed to ${newRole}`, { id: loadingToast });
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to update user role", { id: loadingToast });
+        }
+    };
+
+    const confirmDelete = (user) => {
+        setUserToDelete(user);
+        setIsOpen(true);
+    };
+
+    const handleDeleteUser = async () => {
+        if (!userToDelete) return;
+        
+        const loadingToast = toast.loading("Deleting user...");
+        try {
+            const res = await fetch(`http://localhost:5000/api/users/${userToDelete._id}`, {
+                method: 'DELETE',
+            });
+            
+            if (!res.ok) throw new Error("Failed to delete user");
+            
+            setUsers(prev => prev.filter(u => u._id !== userToDelete._id));
+            toast.success("User deleted successfully", { id: loadingToast });
+            setIsOpen(false);
+            setUserToDelete(null);
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to delete user", { id: loadingToast });
+        }
+    };
 
     const filteredUsers = users.filter(user => {
-        const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                              user.email.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesRole = filterRole === 'all' || user.role === filterRole;
+        const matchesSearch = (user.profileName || user.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                              (user.email || '').toLowerCase().includes(searchQuery.toLowerCase());
+        const userRole = user.role || 'user';
+        const matchesRole = filterRole === 'all' || userRole === filterRole;
         return matchesSearch && matchesRole;
     });
 
     const getRoleIcon = (role) => {
-        switch (role) {
+        switch (role || 'user') {
             case 'admin': return <Shield className="w-4 h-4 text-primary" />;
             case 'artist': return <Paintbrush className="w-4 h-4 text-secondary" />;
             case 'user': return <User className="w-4 h-4 text-muted-foreground" />;
-            default: return null;
+            default: return <User className="w-4 h-4 text-muted-foreground" />;
         }
     };
 
     const getRoleBadgeColor = (role) => {
-        switch (role) {
+        switch (role || 'user') {
             case 'admin': return "bg-primary/10 text-primary border-primary/20";
             case 'artist': return "bg-secondary/10 text-secondary border-secondary/20";
             case 'user': return "bg-muted/30 text-muted-foreground border-separator";
-            default: return "bg-background text-foreground border-separator";
+            default: return "bg-muted/30 text-muted-foreground border-separator";
         }
+    };
+
+    const getUserInitial = (name) => {
+        return name ? name.charAt(0).toUpperCase() : 'U';
     };
 
     return (
@@ -96,32 +162,67 @@ const AdminDashboard = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-separator block md:table-row-group">
-                            {filteredUsers.length > 0 ? (
-                                filteredUsers.map((user) => (
-                                    <tr key={user.id} className="block md:table-row hover:bg-muted/10 transition-colors group p-4 md:p-0">
+                            {isLoading ? (
+                                Array.from({ length: 5 }).map((_, idx) => (
+                                    <tr key={`skeleton-${idx}`} className="block md:table-row border-b border-separator/30 p-4 md:p-0">
                                         <td className="block md:table-cell px-2 py-3 md:px-6 md:py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="relative">
-                                                    <img src={user.avatar} alt={user.name} className="w-12 h-12 md:w-10 md:h-10 rounded-full object-cover border-2 border-background shadow-sm" />
-                                                    <div className={`absolute bottom-0 right-0 w-3 h-3 md:w-2.5 md:h-2.5 rounded-full border-2 border-background ${user.status === 'Active' ? 'bg-primary' : 'bg-muted-foreground'}`}></div>
+                                                <Skeleton className="w-12 h-12 md:w-10 md:h-10 rounded-full shrink-0" />
+                                                <div className="flex-1 space-y-2 min-w-0">
+                                                    <Skeleton className="h-4 w-32 rounded-lg" />
+                                                    <Skeleton className="h-3 w-40 rounded-lg" />
                                                 </div>
-                                                <div>
-                                                    <div className="font-medium text-foreground text-base md:text-sm">{user.name}</div>
-                                                    <div className="text-sm text-muted-foreground">{user.email}</div>
+                                            </div>
+                                        </td>
+                                        <td className="hidden md:table-cell px-2 py-3 md:px-6 md:py-4">
+                                            <Skeleton className="h-6 w-16 rounded-md" />
+                                        </td>
+                                        <td className="hidden md:table-cell px-2 py-3 md:px-6 md:py-4">
+                                            <Skeleton className="h-6 w-20 rounded-full" />
+                                        </td>
+                                        <td className="hidden md:table-cell px-2 py-3 md:px-6 md:py-4">
+                                            <Skeleton className="h-9 w-full max-w-[120px] rounded-lg" />
+                                        </td>
+                                        <td className="hidden md:table-cell px-2 py-3 md:px-6 md:py-4 md:text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <Skeleton className="w-8 h-8 rounded-lg" />
+                                                <Skeleton className="w-8 h-8 rounded-lg" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : filteredUsers.length > 0 ? (
+                                filteredUsers.map((user) => (
+                                    <tr key={user._id || user.id} className="block md:table-row hover:bg-muted/10 transition-colors group p-4 md:p-0">
+                                        <td className="block md:table-cell px-2 py-3 md:px-6 md:py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="relative flex-shrink-0">
+                                                    {user.profileImage || user.image || user.avatar ? (
+                                                        <img src={user.profileImage || user.image || user.avatar} alt={user.profileName || user.name} className="w-12 h-12 md:w-10 md:h-10 rounded-full object-cover border-2 border-background shadow-sm" />
+                                                    ) : (
+                                                        <div className="w-12 h-12 md:w-10 md:h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-lg border-2 border-background shadow-sm">
+                                                            {getUserInitial(user.profileName || user.name)}
+                                                        </div>
+                                                    )}
+                                                    <div className={`absolute bottom-0 right-0 w-3 h-3 md:w-2.5 md:h-2.5 rounded-full border-2 border-background bg-primary`}></div>
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="font-medium text-foreground text-base md:text-sm truncate">{user.profileName || user.name || 'Unknown'}</div>
+                                                    <div className="text-sm text-muted-foreground truncate">{user.email}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="flex items-center justify-between md:table-cell px-2 py-3 md:px-6 md:py-4 border-t border-separator/30 md:border-none mt-2 md:mt-0 pt-4 md:pt-4">
                                             <span className="md:hidden text-xs font-semibold text-muted-foreground uppercase">Status</span>
-                                            <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${user.status === 'Active' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-muted/30 text-muted-foreground border-separator'}`}>
-                                                {user.status}
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border bg-primary/10 text-primary border-primary/20`}>
+                                                Active
                                             </span>
                                         </td>
                                         <td className="flex items-center justify-between md:table-cell px-2 py-3 md:px-6 md:py-4">
                                             <span className="md:hidden text-xs font-semibold text-muted-foreground uppercase">Current Role</span>
                                             <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${getRoleBadgeColor(user.role)}`}>
                                                 {getRoleIcon(user.role)}
-                                                <span className="capitalize">{user.role}</span>
+                                                <span className="capitalize">{user.role || 'user'}</span>
                                             </div>
                                         </td>
                                         <td className="flex items-center justify-between md:table-cell px-2 py-3 md:px-6 md:py-4">
@@ -129,7 +230,8 @@ const AdminDashboard = () => {
                                             <div className="relative w-32 md:w-full md:max-w-[140px]">
                                                 <select 
                                                     className="appearance-none bg-background border border-separator text-foreground text-sm rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary block w-full p-2 pr-8 cursor-pointer hover:bg-muted/10 transition-colors outline-none shadow-sm"
-                                                    defaultValue={user.role}
+                                                    value={user.role || 'user'}
+                                                    onChange={(e) => handleRoleChange(user._id, e.target.value)}
                                                 >
                                                     <option value="user" className="bg-background text-foreground">User</option>
                                                     <option value="artist" className="bg-background text-foreground">Artist</option>
@@ -143,10 +245,11 @@ const AdminDashboard = () => {
                                         <td className="flex items-center justify-between md:table-cell px-2 py-3 md:px-6 md:py-4 md:text-right">
                                             <span className="md:hidden text-xs font-semibold text-muted-foreground uppercase">Actions</span>
                                             <div className="flex items-center justify-end gap-1 opacity-100 transition-opacity">
-                                                <button className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all" title="Edit User">
-                                                    <Edit2 className="w-4 h-4" />
-                                                </button>
-                                                <button className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all" title="Delete User">
+                                                <button 
+                                                    onClick={() => confirmDelete(user)}
+                                                    className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all" 
+                                                    title="Delete User"
+                                                >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
                                                 <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/20 rounded-lg transition-all">
@@ -182,8 +285,44 @@ const AdminDashboard = () => {
                     </div>
                 </div>
             </div>
+
+            <Modal isOpen={isOpen} onOpenChange={setIsOpen}>
+                <Modal.Backdrop className="bg-black/50 backdrop-blur-sm">
+                    <Modal.Container placement="center">
+                        <Modal.Dialog className="bg-[#F8F6F0] border border-black/5 shadow-2xl rounded-3xl p-4 md:p-6 text-foreground max-w-sm w-full mx-auto">
+                        <Modal.Header className="flex flex-col items-center justify-center pt-4 pb-2">
+                            <div className="w-14 h-14 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mb-4 shadow-sm">
+                                <Trash2 className="w-6 h-6 text-red-500" strokeWidth={1.5} />
+                            </div>
+                            <Modal.Heading className="text-xl font-bold text-gray-800">Delete User</Modal.Heading>
+                        </Modal.Header>
+                        <Modal.Body className="text-center px-4 py-0">
+                            <p className="text-[#6C7063] text-sm leading-relaxed">
+                                Are you sure you want to delete the user <strong>{userToDelete?.profileName || userToDelete?.name || 'this user'}</strong>? This action is permanent and cannot be undone.
+                            </p>
+                        </Modal.Body>
+                        <Modal.Footer className="flex flex-row justify-center gap-3 pt-8 pb-2">
+                            <Button 
+                                variant="bordered" 
+                                onPress={() => setIsOpen(false)} 
+                                className="flex-1 font-semibold border border-black/10 text-gray-700 bg-transparent hover:bg-black/5 rounded-2xl py-6"
+                            >
+                                Cancel
+                            </Button>
+                            <Button 
+                                color="danger" 
+                                onPress={() => handleDeleteUser()}
+                                className="flex-1 font-semibold bg-[#FE2C45] text-white shadow-lg shadow-red-500/30 rounded-2xl py-6 border border-transparent"
+                            >
+                                Yes, Delete
+                            </Button>
+                        </Modal.Footer>
+                    </Modal.Dialog>
+                </Modal.Container>
+                </Modal.Backdrop>
+            </Modal>
         </div>
     );
 };
 
-export default AdminDashboard;
+export default AdminManageUsers;
