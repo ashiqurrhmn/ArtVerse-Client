@@ -142,7 +142,7 @@ const AdminDashboard = () => {
                                         </td>
                                         <td className="flex items-center justify-between md:table-cell px-2 py-3 md:px-6 md:py-4 md:text-right">
                                             <span className="md:hidden text-xs font-semibold text-muted-foreground uppercase">Actions</span>
-                                            <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center justify-end gap-1 opacity-100 transition-opacity">
                                                 <button className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all" title="Edit User">
                                                     <Edit2 className="w-4 h-4" />
                                                 </button>

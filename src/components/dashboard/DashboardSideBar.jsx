@@ -212,7 +212,7 @@ export function DashboardSideBar() {
     {
       icon: ImageIcon,
       label: "Manage Artworks",
-      href: "/dashboard/admin/artworks",
+      href: "/dashboard/admin/manage-artworks",
     },
     {
       icon: ReceiptIcon,
