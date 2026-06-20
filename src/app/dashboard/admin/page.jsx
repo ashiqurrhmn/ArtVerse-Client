@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Users, Paintbrush, ShoppingBag, DollarSign } from "lucide-react";
 import {
   AreaChart,
@@ -15,23 +15,6 @@ import {
   Legend,
 } from "recharts";
 
-const salesData = [
-  { name: "Jan", sales: 2400 },
-  { name: "Feb", sales: 1398 },
-  { name: "Mar", sales: 3800 },
-  { name: "Apr", sales: 3908 },
-  { name: "May", sales: 4800 },
-  { name: "Jun", sales: 3800 },
-  { name: "Jul", sales: 4300 },
-];
-
-const categoryData = [
-  { name: "Abstract", value: 400 },
-  { name: "Landscape", value: 300 },
-  { name: "Portrait", value: 300 },
-  { name: "Digital", value: 200 },
-];
-
 const COLORS = [
   "var(--app-primary)",
   "var(--app-secondary)",
@@ -40,6 +23,40 @@ const COLORS = [
 ];
 
 const AdminDashboard = () => {
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalArtists: 0,
+    artworksSold: 0,
+    totalRevenue: 0,
+    salesData: [],
+    categoryData: []
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"}/api/admin/stats`)
+      .then(res => res.json())
+      .then(data => {
+        setStats(data || {});
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch admin stats", err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="size-12 animate-spin rounded-full border-4 border-primary/20 border-t-primary"></div>
+          <p className="text-sm text-muted-foreground animate-pulse">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
@@ -56,30 +73,30 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card
           title="Total Users"
-          value="1,245"
+          value={(stats.totalUsers || 0).toLocaleString()}
           icon={Users}
-          trend="+12%"
+          trend="All time"
           trendUp
         />
         <Card
           title="Total Artists"
-          value="382"
+          value={(stats.totalArtists || 0).toLocaleString()}
           icon={Paintbrush}
-          trend="+5%"
+          trend="All time"
           trendUp
         />
         <Card
           title="Artworks Sold"
-          value="840"
+          value={(stats.artworksSold || 0).toLocaleString()}
           icon={ShoppingBag}
-          trend="+18%"
+          trend="All time"
           trendUp
         />
         <Card
           title="Total Revenue"
-          value="$45,231"
+          value={`$${(stats.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
           icon={DollarSign}
-          trend="+24%"
+          trend="All time"
           trendUp
         />
       </div>
@@ -94,7 +111,7 @@ const AdminDashboard = () => {
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
-                data={salesData}
+                data={stats.salesData || []}
                 margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
               >
                 <defs>
@@ -161,7 +178,7 @@ const AdminDashboard = () => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={categoryData}
+                  data={stats.categoryData || []}
                   cx="50%"
                   cy="45%"
                   innerRadius={60}
@@ -170,7 +187,7 @@ const AdminDashboard = () => {
                   dataKey="value"
                   stroke="none"
                 >
-                  {categoryData.map((entry, index) => (
+                  {(stats.categoryData || []).map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
