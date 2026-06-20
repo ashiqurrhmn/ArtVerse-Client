@@ -3,15 +3,25 @@ import React, { useState, useEffect } from "react";
 import { Search, Trash2, Image as ImageIcon, ArrowUpDown, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
 import { Modal, Button, Skeleton } from "@heroui/react";
+import { motion } from "framer-motion";
 
 const AdminManageArtworks = () => {
   const [artworks, setArtworks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("default");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const [isOpen, setIsOpen] = useState(false);
   const [artworkToDelete, setArtworkToDelete] = useState(null);
+
+  const getSortLabel = () => {
+    switch (sortBy) {
+      case "price-asc": return "Price: Low to High";
+      case "price-desc": return "Price: High to Low";
+      default: return "Sort by: Default";
+    }
+  };
 
   useEffect(() => {
     fetchArtworks();
@@ -130,44 +140,63 @@ const AdminManageArtworks = () => {
         </div>
 
         {/* Search / Action Bar */}
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="relative w-full sm:w-auto group">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            </div>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 mt-4 md:mt-0 w-full md:w-auto flex-1 md:justify-end">
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search artworks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2.5 bg-background border border-separator rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none w-full sm:w-64 text-sm text-foreground placeholder-muted-foreground shadow-sm"
+              className="w-full rounded-lg border border-separator bg-background pl-9 pr-4 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground/60"
             />
           </div>
 
-          <div className="relative w-full sm:w-auto">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="appearance-none bg-background border border-separator text-foreground text-sm rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary block w-full py-2.5 pl-4 pr-10 cursor-pointer hover:bg-muted/10 transition-colors outline-none shadow-sm"
-            >
-              <option value="default" className="bg-background text-foreground">
-                Sort by: Default
-              </option>
-              <option
-                value="price-asc"
-                className="bg-background text-foreground"
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full sm:w-auto flex items-center justify-between gap-2 pl-4 pr-3 py-2.5 bg-background border border-separator rounded-xl text-sm font-semibold text-foreground hover:bg-muted/10 transition-colors shadow-sm cursor-pointer outline-none focus:border-primary focus:ring-1 focus:ring-primary min-w-[170px]"
               >
-                Price: Low to High
-              </option>
-              <option
-                value="price-desc"
-                className="bg-background text-foreground"
-              >
-                Price: High to Low
-              </option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground">
-              <ArrowUpDown className="w-4 h-4" />
+                <span>{getSortLabel()}</span>
+                <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+              </button>
+
+              {isDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsDropdownOpen(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 top-full mt-2 w-full min-w-[170px] bg-background border border-separator rounded-xl shadow-xl overflow-hidden z-50 py-1"
+                  >
+                    {[
+                      { value: "default", label: "Sort by: Default" },
+                      { value: "price-asc", label: "Price: Low to High" },
+                      { value: "price-desc", label: "Price: High to Low" }
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setSortBy(option.value);
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted/20 ${
+                          sortBy === option.value
+                            ? "font-bold text-primary bg-primary/5"
+                            : "text-foreground font-medium"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </motion.div>
+                </>
+              )}
             </div>
           </div>
         </div>
