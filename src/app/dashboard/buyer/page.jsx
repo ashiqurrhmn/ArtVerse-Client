@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, ChevronDown, Download, ImageIcon, CreditCard, Crown, Copy, Check } from "lucide-react";
+import { Search, Filter, ChevronDown, Download, ImageIcon, CreditCard, Crown, Copy, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 
@@ -15,6 +15,16 @@ export default function BuyerDashboard() {
   const [sortBy, setSortBy] = useState("newest");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+
+  // Pagination state
+  const [currentPurchasePage, setCurrentPurchasePage] = useState(1);
+  const [currentSubscriptionPage, setCurrentSubscriptionPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPurchasePage(1);
+    setCurrentSubscriptionPage(1);
+  }, [searchTerm, sortBy]);
 
   const sortOptions = [
     { value: "newest", label: "Newest First" },
@@ -98,6 +108,16 @@ export default function BuyerDashboard() {
     return 0;
   });
 
+  const totalPurchasePages = Math.ceil(sortedPurchases.length / itemsPerPage) || 1;
+  const startPurchaseIndex = (currentPurchasePage - 1) * itemsPerPage;
+  const paginatedPurchases = sortedPurchases.slice(startPurchaseIndex, startPurchaseIndex + itemsPerPage);
+
+  const handlePurchasePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPurchasePages) {
+      setCurrentPurchasePage(newPage);
+    }
+  };
+
   const filteredSubscriptions = subscriptions.filter((sub) => {
     const searchString = searchTerm.toLowerCase();
     const plan = (sub.plan || "").toLowerCase();
@@ -119,6 +139,16 @@ export default function BuyerDashboard() {
     }
     return 0;
   });
+
+  const totalSubscriptionPages = Math.ceil(sortedSubscriptions.length / itemsPerPage) || 1;
+  const startSubscriptionIndex = (currentSubscriptionPage - 1) * itemsPerPage;
+  const paginatedSubscriptions = sortedSubscriptions.slice(startSubscriptionIndex, startSubscriptionIndex + itemsPerPage);
+
+  const handleSubscriptionPageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalSubscriptionPages) {
+      setCurrentSubscriptionPage(newPage);
+    }
+  };
 
   return (
     <div className="flex-1 w-full p-4 md:p-6 overflow-y-auto">
@@ -253,7 +283,8 @@ export default function BuyerDashboard() {
             ) : (
               <div className="overflow-x-auto">
                 {sortedPurchases.length > 0 ? (
-                  <table className="w-full text-left border-collapse">
+                  <>
+                    <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-muted/10 border-b border-separator">
                         <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Artwork</th>
@@ -262,7 +293,7 @@ export default function BuyerDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-separator">
-                      {sortedPurchases.map((item) => (
+                      {paginatedPurchases.map((item) => (
                         <tr key={item._id} className="hover:bg-muted/5 transition-colors group">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2.5">
@@ -304,6 +335,56 @@ export default function BuyerDashboard() {
                       ))}
                     </tbody>
                   </table>
+
+                  {totalPurchasePages > 1 && (
+                    <div className="flex items-center justify-center gap-2 p-4 border-t border-separator">
+                      <button
+                        onClick={() => handlePurchasePageChange(currentPurchasePage - 1)}
+                        disabled={currentPurchasePage === 1}
+                        className="flex size-8 items-center justify-center rounded-lg border border-separator/60 bg-background hover:bg-accent/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronLeft className="size-4" />
+                      </button>
+                      <div className="flex items-center gap-1">
+                        {[...Array(totalPurchasePages)].map((_, i) => {
+                          const pageNum = i + 1;
+                          if (
+                            pageNum === 1 ||
+                            pageNum === totalPurchasePages ||
+                            (pageNum >= currentPurchasePage - 1 && pageNum <= currentPurchasePage + 1)
+                          ) {
+                            return (
+                              <button
+                                key={pageNum}
+                                onClick={() => handlePurchasePageChange(pageNum)}
+                                className={`flex size-8 items-center justify-center rounded-lg text-xs font-bold transition-colors ${
+                                  currentPurchasePage === pageNum
+                                    ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                                    : "border border-separator/60 bg-background hover:bg-accent/50 text-foreground"
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            );
+                          } else if (
+                            pageNum === currentPurchasePage - 2 ||
+                            pageNum === currentPurchasePage + 2
+                          ) {
+                            return <span key={pageNum} className="px-1 text-muted-foreground text-xs">...</span>;
+                          }
+                          return null;
+                        })}
+                      </div>
+                      <button
+                        onClick={() => handlePurchasePageChange(currentPurchasePage + 1)}
+                        disabled={currentPurchasePage === totalPurchasePages}
+                        className="flex size-8 items-center justify-center rounded-lg border border-separator/60 bg-background hover:bg-accent/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronRight className="size-4" />
+                      </button>
+                    </div>
+                  )}
+                  </>
                 ) : (
                   <div className="p-10 text-center flex flex-col items-center">
                     <div className="w-14 h-14 bg-muted/30 rounded-full flex items-center justify-center mb-3">
@@ -368,7 +449,8 @@ export default function BuyerDashboard() {
             ) : (
               <div className="overflow-x-auto">
                 {sortedSubscriptions.length > 0 ? (
-                  <table className="w-full text-left border-collapse">
+                  <>
+                    <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-muted/10 border-b border-separator">
                         <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Plan</th>
@@ -378,7 +460,7 @@ export default function BuyerDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-separator">
-                      {sortedSubscriptions.map((sub) => (
+                      {paginatedSubscriptions.map((sub) => (
                         <tr key={sub.id} className="hover:bg-muted/5 transition-colors">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
@@ -428,6 +510,56 @@ export default function BuyerDashboard() {
                       ))}
                     </tbody>
                   </table>
+
+                  {totalSubscriptionPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 p-4 border-t border-separator">
+                      <button
+                        onClick={() => handleSubscriptionPageChange(currentSubscriptionPage - 1)}
+                        disabled={currentSubscriptionPage === 1}
+                        className="flex size-8 items-center justify-center rounded-lg border border-separator/60 bg-background hover:bg-accent/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronLeft className="size-4" />
+                      </button>
+                      <div className="flex items-center gap-1">
+                        {[...Array(totalSubscriptionPages)].map((_, i) => {
+                          const pageNum = i + 1;
+                          if (
+                            pageNum === 1 ||
+                            pageNum === totalSubscriptionPages ||
+                            (pageNum >= currentSubscriptionPage - 1 && pageNum <= currentSubscriptionPage + 1)
+                          ) {
+                            return (
+                              <button
+                                key={pageNum}
+                                onClick={() => handleSubscriptionPageChange(pageNum)}
+                                className={`flex size-8 items-center justify-center rounded-lg text-xs font-bold transition-colors ${
+                                  currentSubscriptionPage === pageNum
+                                    ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                                    : "border border-separator/60 bg-background hover:bg-accent/50 text-foreground"
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            );
+                          } else if (
+                            pageNum === currentSubscriptionPage - 2 ||
+                            pageNum === currentSubscriptionPage + 2
+                          ) {
+                            return <span key={pageNum} className="px-1 text-muted-foreground text-xs">...</span>;
+                          }
+                          return null;
+                        })}
+                      </div>
+                      <button
+                        onClick={() => handleSubscriptionPageChange(currentSubscriptionPage + 1)}
+                        disabled={currentSubscriptionPage === totalSubscriptionPages}
+                        className="flex size-8 items-center justify-center rounded-lg border border-separator/60 bg-background hover:bg-accent/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronRight className="size-4" />
+                      </button>
+                    </div>
+                  )}
+                  </>
                 ) : (
                   <div className="p-10 text-center flex flex-col items-center">
                     <div className="w-14 h-14 bg-muted/30 rounded-full flex items-center justify-center mb-3">

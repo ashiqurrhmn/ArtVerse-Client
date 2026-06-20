@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ExternalLink, Search, Filter, ImageIcon, Heart } from "lucide-react";
+import { ExternalLink, Search, Filter, ImageIcon, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 
@@ -14,6 +14,14 @@ export default function SavedArtworksPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy]);
 
   const sortOptions = [
     { value: "newest", label: "Newest First" },
@@ -71,6 +79,17 @@ export default function SavedArtworksPage() {
     }
     return 0;
   });
+
+  // Pagination Logic
+  const totalPages = Math.ceil(sortedArtworks.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedArtworks = sortedArtworks.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   const handleUnsave = async (artworkId) => {
     try {
@@ -161,7 +180,7 @@ export default function SavedArtworksPage() {
 
         {/* Gallery Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {[...Array(7)].map((_, idx) => (
               <div
                 key={idx}
@@ -212,8 +231,8 @@ export default function SavedArtworksPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-6">
-            {sortedArtworks.map((artwork, idx) => (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6">
+            {paginatedArtworks.map((artwork, idx) => (
               <motion.div
                 key={artwork._id}
                 initial={{ opacity: 0, y: 15 }}
@@ -291,6 +310,64 @@ export default function SavedArtworksPage() {
                 </div>
               </motion.div>
             ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-8">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="flex size-10 items-center justify-center rounded-xl border border-separator/60 bg-background hover:bg-accent/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="size-5" />
+            </button>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto max-w-[60vw] sm:max-w-none px-2 scrollbar-hide">
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                if (
+                  pageNum === 1 ||
+                  pageNum === totalPages ||
+                  (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                ) {
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`flex size-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold transition-colors ${
+                        currentPage === pageNum
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                          : "border border-separator/60 bg-background hover:bg-accent/50 text-foreground"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                } else if (
+                  pageNum === currentPage - 2 ||
+                  pageNum === currentPage + 2
+                ) {
+                  return (
+                    <span key={pageNum} className="px-1 text-muted-foreground">
+                      ...
+                    </span>
+                  );
+                }
+                return null;
+              })}
+            </div>
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="flex size-10 items-center justify-center rounded-xl border border-separator/60 bg-background hover:bg-accent/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Next page"
+            >
+              <ChevronRight className="size-5" />
+            </button>
           </div>
         )}
       </div>
