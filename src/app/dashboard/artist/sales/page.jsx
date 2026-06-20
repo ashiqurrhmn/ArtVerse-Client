@@ -1,74 +1,144 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Search, Filter, Download } from "lucide-react";
 import Link from "next/link";
-
-// Mock Data
-const mockSales = [
-  {
-    id: "TRX-1092",
-    title: "Starry Night Resonance",
-    buyerName: "Eleanor Vance",
-    buyerEmail: "eleanor.v@example.com",
-    buyerAvatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-    date: "Oct 24, 2023",
-    amount: 1250.00,
-    status: "Completed",
-  },
-  {
-    id: "TRX-1091",
-    title: "Urban Echoes",
-    buyerName: "Marcus Thorne",
-    buyerEmail: "m.thorne@example.com",
-    buyerAvatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-    date: "Oct 18, 2023",
-    amount: 850.50,
-    status: "Completed",
-  },
-  {
-    id: "TRX-1088",
-    title: "Whispering Pines",
-    buyerName: "Sophia Loren",
-    buyerEmail: "sophia.loren@example.com",
-    buyerAvatar: "https://i.pravatar.cc/150?u=a04258114e29026702d",
-    date: "Oct 12, 2023",
-    amount: 2100.00,
-    status: "Processing",
-  },
-  {
-    id: "TRX-1085",
-    title: "Neon Dreams",
-    buyerName: "James Holden",
-    buyerEmail: "james.h@example.com",
-    buyerAvatar: "https://i.pravatar.cc/150?u=a048581f4e29026701d",
-    date: "Sep 30, 2023",
-    amount: 450.00,
-    status: "Completed",
-  },
-  {
-    id: "TRX-1081",
-    title: "Abstract Harmony",
-    buyerName: "Elena Rostova",
-    buyerEmail: "elena.r@example.com",
-    buyerAvatar: "https://i.pravatar.cc/150?u=a042581f4e29026024e",
-    date: "Sep 15, 2023",
-    amount: 1500.00,
-    status: "Completed",
-  },
-];
+import { authClient } from "@/lib/auth-client";
+import { motion } from "framer-motion";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function SalesHistoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [sales, setSales] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [sortBy, setSortBy] = useState("newest");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
 
-  const filteredSales = mockSales.filter(
+  const sortOptions = [
+    { value: "newest", label: "Newest First" },
+    { value: "oldest", label: "Oldest First" },
+    { value: "price-high", label: "Amount: High to Low" },
+    { value: "price-low", label: "Amount: Low to High" },
+  ];
+
+  const currentSortLabel = sortOptions.find((opt) => opt.value === sortBy)?.label || "Newest First";
+
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+
+  useEffect(() => {
+    if (!user?.email) {
+      if (session === null) setIsLoading(false);
+      return;
+    }
+
+    const fetchSales = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"}/api/sales/${encodeURIComponent(user.email)}`,
+        );
+        const data = await res.json();
+        setSales(data || []);
+      } catch (error) {
+        console.error("Failed to fetch sales", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSales();
+  }, [user?.email, session]);
+
+  const filteredSales = sales.filter(
     (sale) =>
-      sale.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sale.buyerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sale.buyerEmail.toLowerCase().includes(searchTerm.toLowerCase())
+      sale.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sale.buyerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sale.buyerEmail?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalRevenue = mockSales.reduce((acc, sale) => acc + sale.amount, 0);
+  const sortedSales = [...filteredSales].sort((a, b) => {
+    if (sortBy === "newest") {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    } else if (sortBy === "oldest") {
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    } else if (sortBy === "price-high") {
+      return (b.amount || 0) - (a.amount || 0);
+    } else if (sortBy === "price-low") {
+      return (a.amount || 0) - (b.amount || 0);
+    }
+    return 0;
+  });
+
+  const totalRevenue = sales.reduce((acc, sale) => acc + (sale.amount || 0), 0);
+
+  const handleExport = (format) => {
+    if (sortedSales.length === 0) return;
+
+    if (format === "csv") {
+      const headers = ["Transaction ID", "Artwork Title", "Buyer Name", "Buyer Email", "Purchase Date", "Status", "Amount (USD)"];
+      
+      const rows = sortedSales.map(sale => [
+        sale.id,
+        `"${(sale.title || "").replace(/"/g, '""')}"`,
+        `"${(sale.buyerName || "").replace(/"/g, '""')}"`,
+        sale.buyerEmail,
+        `"${sale.date}"`,
+        sale.status,
+        sale.amount
+      ]);
+
+      const csvContent = [
+        headers.join(","),
+        ...rows.map(r => r.join(","))
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `sales_history_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (format === "pdf") {
+      const doc = new jsPDF();
+      
+      doc.setFontSize(18);
+      doc.text("Sales History Report", 14, 22);
+      
+      doc.setFontSize(11);
+      doc.setTextColor(100);
+      doc.text(`Generated on: ${new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })}`, 14, 30);
+      
+      const tableColumn = ["Transaction ID", "Artwork Title", "Buyer", "Date", "Status", "Amount"];
+      const tableRows = [];
+
+      sortedSales.forEach(sale => {
+        const saleData = [
+          sale.id,
+          sale.title,
+          sale.buyerName,
+          sale.date,
+          sale.status,
+          `$${sale.amount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+        ];
+        tableRows.push(saleData);
+      });
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 35,
+        theme: 'striped',
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [41, 128, 185] },
+      });
+
+      doc.save(`sales_history_${new Date().toISOString().split('T')[0]}.pdf`);
+    }
+  };
 
   return (
     <div className="min-h-full text-foreground px-4 md:px-6 pb-16">
@@ -95,12 +165,12 @@ export default function SalesHistoryPage() {
         <div className="flex items-center gap-4 bg-accent/30 dark:bg-accent/20 border border-separator rounded-xl px-5 py-3 shadow-sm">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Total Revenue</p>
-            <p className="text-xl font-bold text-foreground">${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+            <p className="text-xl font-bold text-foreground">{isLoading ? "-" : `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}</p>
           </div>
           <div className="w-px h-10 bg-separator mx-2" />
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Artworks Sold</p>
-            <p className="text-xl font-bold text-foreground">{mockSales.length}</p>
+            <p className="text-xl font-bold text-foreground">{isLoading ? "-" : sales.length}</p>
           </div>
         </div>
       </div>
@@ -122,14 +192,91 @@ export default function SalesHistoryPage() {
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg border border-separator bg-background px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-accent/40 text-foreground">
-              <Filter className="size-4" />
-              Filter
-            </button>
-            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg border border-separator bg-background px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-accent/40 text-foreground">
-              <Download className="size-4" />
-              Export
-            </button>
+            <div className="relative w-full sm:w-auto">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full sm:w-auto flex items-center justify-between gap-2 pl-4 pr-3 py-2.5 bg-background border border-separator rounded-xl text-sm font-semibold text-foreground hover:bg-muted/10 transition-colors shadow-sm cursor-pointer outline-none focus:border-primary focus:ring-1 focus:ring-primary min-w-[170px]"
+              >
+                <span>{currentSortLabel}</span>
+                <Filter className="w-4 h-4 text-muted-foreground" />
+              </button>
+
+              {isDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsDropdownOpen(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 top-full mt-2 w-full min-w-[170px] bg-background border border-separator rounded-xl shadow-xl overflow-hidden z-50 py-1"
+                  >
+                    {sortOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setSortBy(option.value);
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted/20 ${
+                          sortBy === option.value
+                            ? "font-bold text-primary bg-primary/5"
+                            : "text-foreground font-medium"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </motion.div>
+                </>
+              )}
+            </div>
+            <div className="relative w-full sm:w-auto">
+              <button 
+                onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)}
+                disabled={sortedSales.length === 0}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-lg border border-separator bg-background px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-accent/40 text-foreground disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
+              >
+                <Download className="size-4" />
+                Export
+              </button>
+
+              {isExportDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsExportDropdownOpen(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 top-full mt-2 w-full min-w-[120px] bg-background border border-separator rounded-xl shadow-xl overflow-hidden z-50 py-1"
+                  >
+                    <button
+                      onClick={() => {
+                        handleExport("csv");
+                        setIsExportDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted/20 text-foreground"
+                    >
+                      Export to CSV
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleExport("pdf");
+                        setIsExportDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted/20 text-foreground"
+                    >
+                      Export to PDF
+                    </button>
+                  </motion.div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -148,14 +295,32 @@ export default function SalesHistoryPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-separator/60">
-                {filteredSales.length > 0 ? (
-                  filteredSales.map((sale) => (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-12 text-center">
+                      <div className="flex justify-center">
+                        <span className="inline-block size-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                      </div>
+                    </td>
+                  </tr>
+                ) : sortedSales.length > 0 ? (
+                  sortedSales.map((sale) => (
                     <tr key={sale.id} className="transition-colors hover:bg-accent/30 dark:hover:bg-accent/20 group">
                       <td className="px-6 py-4">
                         <span className="font-semibold text-foreground">{sale.title}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-medium text-foreground">{sale.buyerName}</span>
+                        <div className="flex items-center gap-3">
+                          {sale.buyerAvatar ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={sale.buyerAvatar} alt={sale.buyerName} className="size-8 rounded-full object-cover bg-muted" />
+                          ) : (
+                            <div className="size-8 rounded-full bg-muted border border-separator flex items-center justify-center font-bold text-xs">
+                              {sale.buyerName?.charAt(0)?.toUpperCase()}
+                            </div>
+                          )}
+                          <span className="font-medium text-foreground">{sale.buyerName}</span>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-muted-foreground">{sale.buyerEmail}</span>
@@ -171,7 +336,7 @@ export default function SalesHistoryPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right font-bold text-foreground">
-                        ${sale.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        ${sale.amount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
                     </tr>
                   ))
