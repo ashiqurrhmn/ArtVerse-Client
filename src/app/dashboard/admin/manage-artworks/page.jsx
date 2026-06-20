@@ -1,9 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Search, Trash2, Image as ImageIcon, ArrowUpDown, ChevronDown } from "lucide-react";
+import { Search, Trash2, Image as ImageIcon, ArrowUpDown, ChevronDown, Download } from "lucide-react";
 import toast from "react-hot-toast";
 import { Modal, Button, Skeleton } from "@heroui/react";
 import { motion } from "framer-motion";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const AdminManageArtworks = () => {
   const [artworks, setArtworks] = useState([]);
@@ -126,6 +128,54 @@ const AdminManageArtworks = () => {
     return 0;
   });
 
+  const handleExport = () => {
+    try {
+      const doc = new jsPDF();
+      
+      doc.setFontSize(20);
+      doc.setTextColor(41, 128, 185);
+      doc.text("ArtVerse", 14, 22);
+      
+      doc.setFontSize(11);
+      doc.setTextColor(100);
+      doc.text(`Manage Artworks`, 14, 30);
+      doc.text(`Generated on: ${new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })}`, 14, 36);
+      
+      const tableColumn = ["Title", "Artist", "Price", "Status", "Upload Date"];
+      const tableRows = [];
+
+      sortedArtworks.forEach(art => {
+        const uploadDate = art._id
+          ? new Date(parseInt(art._id.substring(0, 8), 16) * 1000).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })
+          : "N/A";
+
+        const rowData = [
+          art.title || "Unknown",
+          art.userName || art.artist || "Unknown",
+          `$${(art.price || 0).toLocaleString()}`,
+          art.status || "Published",
+          uploadDate
+        ];
+        tableRows.push(rowData);
+      });
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 45,
+        theme: 'striped',
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [41, 128, 185] },
+      });
+
+      doc.save(`artworks_${new Date().toISOString().split('T')[0]}.pdf`);
+      toast.success("Exported to PDF successfully!");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export PDF");
+    }
+  };
+
   return (
     <div className="p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header Section */}
@@ -198,6 +248,15 @@ const AdminManageArtworks = () => {
                 </>
               )}
             </div>
+
+            <button 
+              onClick={handleExport}
+              disabled={sortedArtworks.length === 0}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-lg border border-separator bg-background px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-accent/40 text-foreground disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
+            >
+              <Download className="size-4" />
+              Export PDF
+            </button>
           </div>
         </div>
       </div>

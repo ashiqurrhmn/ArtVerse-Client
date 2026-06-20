@@ -108,7 +108,7 @@ const AdminDashboard = () => {
           <h2 className="text-lg font-semibold text-foreground mb-6">
             Revenue Overview
           </h2>
-          <div className="h-[300px] w-full">
+          <div className="h-[300px] min-h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={stats.salesData || []}
@@ -174,7 +174,7 @@ const AdminDashboard = () => {
           <h2 className="text-lg font-semibold text-foreground mb-6">
             Artworks by Category
           </h2>
-          <div className="h-[300px] w-full flex-1">
+          <div className="h-[300px] min-h-[300px] w-full flex-1">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
