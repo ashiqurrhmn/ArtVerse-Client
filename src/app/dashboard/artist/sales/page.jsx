@@ -16,6 +16,14 @@ export default function SalesHistoryPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy]);
+
   const sortOptions = [
     { value: "newest", label: "Newest First" },
     { value: "oldest", label: "Oldest First" },
@@ -70,6 +78,17 @@ export default function SalesHistoryPage() {
     }
     return 0;
   });
+
+  // Pagination Logic
+  const totalPages = Math.ceil(sortedSales.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedSales = sortedSales.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   const totalRevenue = sales.reduce((acc, sale) => acc + (sale.amount || 0), 0);
 
@@ -303,8 +322,8 @@ export default function SalesHistoryPage() {
                       </div>
                     </td>
                   </tr>
-                ) : sortedSales.length > 0 ? (
-                  sortedSales.map((sale) => (
+                ) : paginatedSales.length > 0 ? (
+                  paginatedSales.map((sale) => (
                     <tr key={sale.id} className="transition-colors hover:bg-accent/30 dark:hover:bg-accent/20 group">
                       <td className="px-6 py-4">
                         <span className="font-semibold text-foreground">{sale.title}</span>
@@ -353,6 +372,77 @@ export default function SalesHistoryPage() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Pagination */}
+        <div className="bg-muted/10 border border-separator rounded-2xl px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 mt-4">
+          <div className="text-sm text-muted-foreground">
+            Showing{" "}
+            <span className="font-medium text-foreground">
+              {sortedSales.length > 0 ? startIndex + 1 : 0}
+            </span>{" "}
+            to{" "}
+            <span className="font-medium text-foreground">
+              {Math.min(startIndex + itemsPerPage, sortedSales.length)}
+            </span>{" "}
+            of{" "}
+            <span className="font-medium text-foreground">
+              {sortedSales.length}
+            </span>{" "}
+            sales
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1 || sortedSales.length === 0}
+              className="px-3 py-1.5 text-sm font-medium text-foreground bg-background border border-separator rounded-lg hover:bg-muted/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            >
+              Previous
+            </button>
+
+            <div className="hidden sm:flex gap-1">
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                if (
+                  pageNum === 1 ||
+                  pageNum === totalPages ||
+                  (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                ) {
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                        currentPage === pageNum
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-foreground bg-background border border-separator hover:bg-muted/20"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                } else if (
+                  pageNum === currentPage - 2 ||
+                  pageNum === currentPage + 2
+                ) {
+                  return (
+                    <span key={pageNum} className="px-2 py-1.5 text-muted-foreground">
+                      ...
+                    </span>
+                  );
+                }
+                return null;
+              })}
+            </div>
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages || sortedSales.length === 0}
+              className="px-3 py-1.5 text-sm font-medium text-foreground bg-background border border-separator rounded-lg hover:bg-muted/20 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
           </div>
         </div>
 

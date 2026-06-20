@@ -96,6 +96,7 @@ export default function ArtistDashboard() {
       date: a.date || new Date().toLocaleDateString(),
       price: `$${a.price}`,
       status: a.status || "Draft",
+      image: a.image,
       statusClass: (a.status?.toLowerCase() === "selling" || a.status?.toLowerCase() === "approved") 
         ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
         : (a.status?.toLowerCase() === "reviewing")
@@ -282,14 +283,22 @@ function SectionHeader({ title, action, href }) {
   );
 }
 
-function ArtworkRow({ name, category, date, price, status, statusClass }) {
+function ArtworkRow({ name, category, date, price, status, statusClass, image }) {
   return (
     <tr className="transition-colors hover:bg-accent/30 dark:hover:bg-accent/20 group">
       <td className="px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-separator bg-muted/40 text-muted-foreground">
-            <FileImage className="size-4" />
-          </div>
+          {image ? (
+            <img 
+              src={image} 
+              alt={name} 
+              className="size-10 shrink-0 rounded-xl object-cover border border-separator shadow-sm"
+            />
+          ) : (
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-separator bg-muted/40 text-muted-foreground shadow-sm">
+              <FileImage className="size-4" />
+            </div>
+          )}
           <div>
             <p className="font-semibold text-foreground">{name}</p>
             <p className="text-xs text-muted-foreground">{category}</p>

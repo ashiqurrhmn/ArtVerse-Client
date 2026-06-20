@@ -26,6 +26,14 @@ export default function ManageArtworksPage() {
   const [deleteId, setDeleteId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortOption]);
+
   useEffect(() => {
     const fetchArtworks = async () => {
       try {
@@ -58,6 +66,17 @@ export default function ManageArtworksPage() {
   } else if (sortOption === "date-oldest") {
     filteredArtworks.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
   }
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredArtworks.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedArtworks = filteredArtworks.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   const totalArtworks = filteredArtworks.length;
   const publishedCount = filteredArtworks.filter(
@@ -248,8 +267,8 @@ export default function ManageArtworksPage() {
                       </td>
                     </tr>
                   ))
-                ) : filteredArtworks.length > 0 ? (
-                  filteredArtworks.map((artwork) => (
+                ) : paginatedArtworks.length > 0 ? (
+                  paginatedArtworks.map((artwork) => (
                     <tr
                       key={artwork._id}
                       className="transition-colors hover:bg-accent/30 dark:hover:bg-accent/20 group"
@@ -351,6 +370,77 @@ export default function ManageArtworksPage() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Pagination */}
+        <div className="bg-muted/10 border border-separator rounded-2xl px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 mt-4">
+          <div className="text-sm text-muted-foreground">
+            Showing{" "}
+            <span className="font-medium text-foreground">
+              {filteredArtworks.length > 0 ? startIndex + 1 : 0}
+            </span>{" "}
+            to{" "}
+            <span className="font-medium text-foreground">
+              {Math.min(startIndex + itemsPerPage, filteredArtworks.length)}
+            </span>{" "}
+            of{" "}
+            <span className="font-medium text-foreground">
+              {filteredArtworks.length}
+            </span>{" "}
+            artworks
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1 || filteredArtworks.length === 0}
+              className="px-3 py-1.5 text-sm font-medium text-foreground bg-background border border-separator rounded-lg hover:bg-muted/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            >
+              Previous
+            </button>
+
+            <div className="hidden sm:flex gap-1">
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                if (
+                  pageNum === 1 ||
+                  pageNum === totalPages ||
+                  (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                ) {
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                        currentPage === pageNum
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-foreground bg-background border border-separator hover:bg-muted/20"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                } else if (
+                  pageNum === currentPage - 2 ||
+                  pageNum === currentPage + 2
+                ) {
+                  return (
+                    <span key={pageNum} className="px-2 py-1.5 text-muted-foreground">
+                      ...
+                    </span>
+                  );
+                }
+                return null;
+              })}
+            </div>
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages || filteredArtworks.length === 0}
+              className="px-3 py-1.5 text-sm font-medium text-foreground bg-background border border-separator rounded-lg hover:bg-muted/20 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
           </div>
         </div>
       </div>
