@@ -3,17 +3,32 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getArtworkById } from "@/lib/api/artworks";
-import { ArrowLeft, Heart, ImageIcon, ShoppingCart, Calendar, Tag, ShieldCheck, BadgeCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  Heart,
+  ImageIcon,
+  ShoppingCart,
+  Calendar,
+  Tag,
+  ShieldCheck,
+  BadgeCheck,
+  MessageSquare,
+  Send,
+  Pencil,
+  Trash2,
+  LogIn,
+} from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { authClient } from "@/lib/auth-client";
+import CommentSection from "@/components/CommentSection";
 
 export default function ArtworkDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id;
-  
+
   const [artwork, setArtwork] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -27,7 +42,9 @@ export default function ArtworkDetailsPage() {
     if (!user || !id) return;
     const checkSaved = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/saved-artworks/check/${encodeURIComponent(user.email)}/${id}`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/saved-artworks/check/${encodeURIComponent(user.email)}/${id}`,
+        );
         const data = await res.json();
         setIsSaved(data.saved);
       } catch (e) {
@@ -47,15 +64,21 @@ export default function ArtworkDetailsPage() {
     setIsSaved(!isSaved);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/saved-artworks/toggle`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email, artworkId: id }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/saved-artworks/toggle`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: user.email, artworkId: id }),
+        },
+      );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setIsSaved(data.saved);
-      toast.success(data.saved ? "Artwork saved!" : "Removed from saved", { position: "bottom-right", duration: 2000 });
+      toast.success(data.saved ? "Artwork saved!" : "Removed from saved", {
+        position: "bottom-right",
+        duration: 2000,
+      });
     } catch (e) {
       console.error(e);
       setIsSaved(isSaved);
@@ -69,7 +92,9 @@ export default function ArtworkDetailsPage() {
     if (!user || user.role !== "buyer") return;
     const fetchStats = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/purchases/stats/${user.email}`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/purchases/stats/${user.email}`,
+        );
         const data = await res.json();
         if (data && !data.error) {
           setPurchaseStats(data);
@@ -83,7 +108,7 @@ export default function ArtworkDetailsPage() {
 
   useEffect(() => {
     if (!id) return;
-    
+
     const fetchArtwork = async () => {
       try {
         const data = await getArtworkById(id);
@@ -103,7 +128,9 @@ export default function ArtworkDetailsPage() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <span className="size-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-          <p className="text-muted-foreground font-medium animate-pulse">Loading masterpiece...</p>
+          <p className="text-muted-foreground font-medium animate-pulse">
+            Loading masterpiece...
+          </p>
         </div>
       </div>
     );
@@ -115,11 +142,14 @@ export default function ArtworkDetailsPage() {
         <div className="flex size-20 items-center justify-center rounded-full bg-muted/50 mb-6">
           <ImageIcon className="size-10 text-muted-foreground/50" />
         </div>
-        <h1 className="text-3xl font-bold text-foreground mb-4">Artwork Not Found</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-4">
+          Artwork Not Found
+        </h1>
         <p className="text-muted-foreground mb-8 max-w-md">
-          The artwork you are looking for does not exist or has been removed by the artist.
+          The artwork you are looking for does not exist or has been removed by
+          the artist.
         </p>
-        <button 
+        <button
           onClick={() => router.back()}
           className="rounded-full bg-primary px-6 py-2.5 font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
         >
@@ -131,11 +161,15 @@ export default function ArtworkDetailsPage() {
 
   const handlePurchase = async () => {
     if (!user) {
-      toast.error("Please sign in to purchase artwork.", { position: "bottom-center" });
+      toast.error("Please sign in to purchase artwork.", {
+        position: "bottom-center",
+      });
       return;
     }
     if (user.role !== "buyer") {
-      toast.error("Only buyers can purchase artworks.", { position: "bottom-center" });
+      toast.error("Only buyers can purchase artworks.", {
+        position: "bottom-center",
+      });
       return;
     }
 
@@ -153,13 +187,16 @@ export default function ArtworkDetailsPage() {
             _id: artwork._id,
             buyerEmail: user.email,
           }),
-        }
+        },
       );
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
       } else {
-        toast.error(data.error || data.message || "Failed to create checkout session.", { position: "bottom-center" });
+        toast.error(
+          data.error || data.message || "Failed to create checkout session.",
+          { position: "bottom-center" },
+        );
         setIsPurchasing(false);
       }
     } catch (error) {
@@ -173,12 +210,10 @@ export default function ArtworkDetailsPage() {
 
   return (
     <main className="min-h-screen bg-background pb-20 pt-4 md:pt-6">
-      
       <div className="mx-auto max-w-7xl">
-        
         {/* Back Button */}
         <div className="px-4 md:px-10 lg:px-12 md:pt-6 mb-6">
-          <button 
+          <button
             onClick={() => router.back()}
             className="group flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-fit"
           >
@@ -190,10 +225,9 @@ export default function ArtworkDetailsPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 md:px-10 lg:px-12">
-          
           {/* Left Column: Image Viewer */}
           <div className="lg:col-span-7">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
@@ -201,10 +235,10 @@ export default function ArtworkDetailsPage() {
             >
               {artwork.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img 
-                  src={artwork.image} 
+                <img
+                  src={artwork.image}
                   alt={artwork.title}
-                  className="w-full h-full object-contain max-h-[75vh] md:max-h-[85vh] backdrop-blur-3xl" 
+                  className="w-full h-full object-contain max-h-[75vh] md:max-h-[85vh] backdrop-blur-3xl"
                 />
               ) : (
                 <ImageIcon className="size-20 text-muted-foreground/30" />
@@ -223,7 +257,7 @@ export default function ArtworkDetailsPage() {
 
           {/* Right Column: Details & Actions */}
           <div className="lg:col-span-5 flex flex-col justify-start px-4 md:px-0">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
@@ -231,20 +265,34 @@ export default function ArtworkDetailsPage() {
               {/* Status Banners */}
               {artwork.status === "Reviewing" && (
                 <div className="mb-6 rounded-2xl bg-yellow-500/10 p-4 border border-yellow-500/20 flex items-start gap-3">
-                  <div className="size-5 text-yellow-600 dark:text-yellow-500 mt-0.5 flex items-center justify-center font-bold">!</div>
+                  <div className="size-5 text-yellow-600 dark:text-yellow-500 mt-0.5 flex items-center justify-center font-bold">
+                    !
+                  </div>
                   <div>
-                    <p className="text-sm font-bold text-yellow-600 dark:text-yellow-500">Admin is reviewing this post</p>
-                    <p className="text-xs text-yellow-600/80 dark:text-yellow-500/80 mt-0.5">This artwork is currently under review and is not publicly visible yet.</p>
+                    <p className="text-sm font-bold text-yellow-600 dark:text-yellow-500">
+                      Admin is reviewing this post
+                    </p>
+                    <p className="text-xs text-yellow-600/80 dark:text-yellow-500/80 mt-0.5">
+                      This artwork is currently under review and is not publicly
+                      visible yet.
+                    </p>
                   </div>
                 </div>
               )}
-              
+
               {artwork.status === "Rejected" && (
                 <div className="mb-6 rounded-2xl bg-red-500/10 p-4 border border-red-500/20 flex items-start gap-3">
-                  <div className="size-5 text-red-600 dark:text-red-500 mt-0.5 flex items-center justify-center font-bold">X</div>
+                  <div className="size-5 text-red-600 dark:text-red-500 mt-0.5 flex items-center justify-center font-bold">
+                    X
+                  </div>
                   <div>
-                    <p className="text-sm font-bold text-red-600 dark:text-red-500">Artwork Rejected</p>
-                    <p className="text-xs text-red-600/80 dark:text-red-500/80 mt-0.5">This artwork did not meet the platform guidelines and has been rejected.</p>
+                    <p className="text-sm font-bold text-red-600 dark:text-red-500">
+                      Artwork Rejected
+                    </p>
+                    <p className="text-xs text-red-600/80 dark:text-red-500/80 mt-0.5">
+                      This artwork did not meet the platform guidelines and has
+                      been rejected.
+                    </p>
                   </div>
                 </div>
               )}
@@ -254,8 +302,13 @@ export default function ArtworkDetailsPage() {
                 <div className="mb-6 rounded-2xl bg-emerald-500/10 p-4 border border-emerald-500/20 flex items-start gap-3">
                   <BadgeCheck className="size-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Artwork Sold</p>
-                    <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">This artwork has been purchased and is no longer available for sale.</p>
+                    <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                      Artwork Sold
+                    </p>
+                    <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">
+                      This artwork has been purchased and is no longer available
+                      for sale.
+                    </p>
                   </div>
                 </div>
               )}
@@ -276,84 +329,112 @@ export default function ArtworkDetailsPage() {
               <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-foreground leading-tight tracking-tight mb-4">
                 {artwork.title}
               </h1>
-              
-              <Link href={`/artist/${artwork.email}`} className="flex items-center gap-3 mb-6 md:mb-8 pb-6 md:pb-8 border-b border-separator/60 hover:opacity-80 transition-opacity w-fit">
+
+              <Link
+                href={`/artist/${artwork.email}`}
+                className="flex items-center gap-3 mb-6 md:mb-8 pb-6 md:pb-8 border-b border-separator/60 hover:opacity-80 transition-opacity w-fit"
+              >
                 <div className="flex size-10 md:size-12 items-center justify-center rounded-full bg-accent text-base md:text-lg font-bold text-primary shadow-inner overflow-hidden border-2 border-background">
                   {artwork.artistImage ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={artwork.artistImage} alt={artwork.userName} className="h-full w-full object-cover" />
+                    <img
+                      src={artwork.artistImage}
+                      alt={artwork.userName}
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
                     (artwork.userName || "A")[0].toUpperCase()
                   )}
                 </div>
                 <div>
-                  <p className="text-xs md:text-sm font-medium text-muted-foreground">Created by</p>
-                  <p className="text-base md:text-lg font-bold text-foreground hover:text-primary transition-colors">{artwork.userName || "Unknown Artist"}</p>
+                  <p className="text-xs md:text-sm font-medium text-muted-foreground">
+                    Created by
+                  </p>
+                  <p className="text-base md:text-lg font-bold text-foreground hover:text-primary transition-colors">
+                    {artwork.userName || "Unknown Artist"}
+                  </p>
                 </div>
               </Link>
 
               {/* Price & Primary Actions */}
               <div className="mb-8 md:mb-10">
-                <p className="text-xs md:text-sm font-bold text-muted-foreground uppercase tracking-widest mb-1 md:mb-2">Price</p>
+                <p className="text-xs md:text-sm font-bold text-muted-foreground uppercase tracking-widest mb-1 md:mb-2">
+                  Price
+                </p>
                 <p className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-5 md:mb-6">
                   ${artwork.price}
                 </p>
-                
+
                 {/* Purchase Plan Progress */}
-                {user?.role === "buyer" && purchaseStats && (!artwork.status || artwork.status === "Published") && !isSold && (
-                  <div className="mb-6 p-4 rounded-xl bg-accent/20 border border-separator/40">
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="font-semibold text-foreground capitalize">
-                        {purchaseStats.plan} Plan
-                      </span>
-                      <span className="text-muted-foreground font-medium text-xs">
-                        {purchaseStats.limit === -1 ? "Unlimited Purchases" : `${purchaseStats.count} / ${purchaseStats.limit} Purchased`}
-                      </span>
+                {user?.role === "buyer" &&
+                  purchaseStats &&
+                  (!artwork.status || artwork.status === "Published") &&
+                  !isSold && (
+                    <div className="mb-6 p-4 rounded-xl bg-accent/20 border border-separator/40">
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="font-semibold text-foreground capitalize">
+                          {purchaseStats.plan} Plan
+                        </span>
+                        <span className="text-muted-foreground font-medium text-xs">
+                          {purchaseStats.limit === -1
+                            ? "Unlimited Purchases"
+                            : `${purchaseStats.count} / ${purchaseStats.limit} Purchased`}
+                        </span>
+                      </div>
+                      {purchaseStats.limit !== -1 && (
+                        <div className="w-full bg-muted/40 rounded-full h-2 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-1000 ${purchaseStats.count >= purchaseStats.limit ? "bg-red-500" : "bg-primary"}`}
+                            style={{
+                              width: `${Math.min((purchaseStats.count / purchaseStats.limit) * 100, 100)}%`,
+                            }}
+                          />
+                        </div>
+                      )}
+                      {purchaseStats.limit !== -1 &&
+                        purchaseStats.count >= purchaseStats.limit && (
+                          <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                            <p className="text-xs text-red-500 font-medium">
+                              You've reached your limit. Upgrade your plan to
+                              collect more!
+                            </p>
+                            <Link
+                              href="/pricing"
+                              className="shrink-0 text-xs font-bold bg-red-500 text-white px-3 py-1.5 rounded-md hover:bg-red-600 transition-colors shadow-sm text-center"
+                            >
+                              Upgrade Plan
+                            </Link>
+                          </div>
+                        )}
                     </div>
-                    {purchaseStats.limit !== -1 && (
-                      <div className="w-full bg-muted/40 rounded-full h-2 overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full transition-all duration-1000 ${purchaseStats.count >= purchaseStats.limit ? 'bg-red-500' : 'bg-primary'}`}
-                          style={{ width: `${Math.min((purchaseStats.count / purchaseStats.limit) * 100, 100)}%` }}
-                        />
-                      </div>
-                    )}
-                    {purchaseStats.limit !== -1 && purchaseStats.count >= purchaseStats.limit && (
-                      <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                        <p className="text-xs text-red-500 font-medium">
-                          You've reached your limit. Upgrade your plan to collect more!
-                        </p>
-                        <Link 
-                          href="/pricing"
-                          className="shrink-0 text-xs font-bold bg-red-500 text-white px-3 py-1.5 rounded-md hover:bg-red-600 transition-colors shadow-sm text-center"
-                        >
-                          Upgrade Plan
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  )}
 
                 <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-4">
-                  {(!artwork.status || artwork.status === "Published") && !isSold && (
-                    <button 
-                      onClick={handlePurchase}
-                      disabled={isPurchasing || (purchaseStats && purchaseStats.limit !== -1 && purchaseStats.count >= purchaseStats.limit)}
-                      className="w-full sm:flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground px-6 md:px-8 py-3.5 md:py-4 text-sm font-bold text-background transition-all hover:bg-foreground/90 hover:scale-[1.02] shadow-xl shadow-foreground/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
-                    >
-                      {isPurchasing ? (
-                        <>
-                          <span className="size-4 border-2 border-background/30 border-t-background rounded-full animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingCart className="size-4 md:size-5" />
-                          Purchase Art
-                        </>
-                      )}
-                    </button>
-                  )}
+                  {(!artwork.status || artwork.status === "Published") &&
+                    !isSold && (
+                      <button
+                        onClick={handlePurchase}
+                        disabled={
+                          isPurchasing ||
+                          (purchaseStats &&
+                            purchaseStats.limit !== -1 &&
+                            purchaseStats.count >= purchaseStats.limit)
+                        }
+                        className="w-full sm:flex-1 flex items-center justify-center gap-2 rounded-2xl bg-foreground px-6 md:px-8 py-3.5 md:py-4 text-sm font-bold text-background transition-all hover:bg-foreground/90 hover:scale-[1.02] shadow-xl shadow-foreground/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      >
+                        {isPurchasing ? (
+                          <>
+                            <span className="size-4 border-2 border-background/30 border-t-background rounded-full animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <ShoppingCart className="size-4 md:size-5" />
+                            Purchase Art
+                          </>
+                        )}
+                      </button>
+                    )}
                   {isSold && (
                     <div className="w-full sm:flex-1 flex items-center justify-center gap-2 rounded-2xl bg-muted/40 px-6 md:px-8 py-3.5 md:py-4 text-sm font-bold text-muted-foreground border border-separator cursor-not-allowed">
                       <BadgeCheck className="size-4 md:size-5" />
@@ -361,16 +442,18 @@ export default function ArtworkDetailsPage() {
                     </div>
                   )}
                   <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <button 
+                    <button
                       onClick={toggleSave}
                       disabled={isSaving}
                       className={`flex-1 sm:flex-none flex size-12 md:size-14 items-center justify-center rounded-2xl border-2 transition-all ${
-                        isSaved 
-                          ? "border-red-500/30 bg-red-500/10 text-red-500 hover:bg-red-500/20" 
+                        isSaved
+                          ? "border-red-500/30 bg-red-500/10 text-red-500 hover:bg-red-500/20"
                           : "border-separator bg-background text-muted-foreground hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-500"
                       }`}
                     >
-                      <Heart className={`size-5 md:size-6 ${isSaved ? "fill-current" : ""}`} />
+                      <Heart
+                        className={`size-5 md:size-6 ${isSaved ? "fill-current" : ""}`}
+                      />
                     </button>
                   </div>
                 </div>
@@ -378,9 +461,12 @@ export default function ArtworkDetailsPage() {
 
               {/* Description */}
               <div className="mb-8">
-                <h3 className="text-lg font-bold text-foreground mb-3">About the Artwork</h3>
+                <h3 className="text-lg font-bold text-foreground mb-3">
+                  About the Artwork
+                </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  {artwork.description || "No description provided by the artist."}
+                  {artwork.description ||
+                    "No description provided by the artist."}
                 </p>
               </div>
 
@@ -390,16 +476,22 @@ export default function ArtworkDetailsPage() {
                   <div className="flex items-start gap-3">
                     <ShieldCheck className="size-5 text-green-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-bold text-foreground">Authenticity Guaranteed</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Verified original artwork from the artist.</p>
+                      <p className="text-sm font-bold text-foreground">
+                        Authenticity Guaranteed
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Verified original artwork from the artist.
+                      </p>
                     </div>
                   </div>
                 </div>
               )}
-
             </motion.div>
           </div>
         </div>
+
+        {/* ── Comment Section ── */}
+        <CommentSection id={id} user={user} />
       </div>
     </main>
   );
