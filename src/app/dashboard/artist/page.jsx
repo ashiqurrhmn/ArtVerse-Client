@@ -21,17 +21,26 @@ export default function ArtistDashboard() {
   const { profile } = useProfile();
   
   const [artworks, setArtworks] = useState([]);
+  const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user?.email) {
-      getArtworks(user.email).then(data => {
-        setArtworks(data || []);
-        setLoading(false);
-      }).catch(err => {
-        console.error("Failed to load artworks", err);
-        setLoading(false);
-      });
+      const fetchArtworks = getArtworks(user.email);
+      const fetchSales = fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"}/api/sales/${encodeURIComponent(user.email)}`
+      ).then(res => res.json());
+
+      Promise.all([fetchArtworks, fetchSales])
+        .then(([artworksData, salesData]) => {
+          setArtworks(artworksData || []);
+          setSales(salesData || []);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error("Failed to load dashboard data", err);
+          setLoading(false);
+        });
     }
   }, [user?.email]);
 
@@ -39,6 +48,7 @@ export default function ArtistDashboard() {
 
   // Dynamic Stats Calculation
   const activeAuctions = artworks.filter(a => a.status?.toLowerCase() === "selling" || a.status?.toLowerCase() === "reviewing").length;
+  const totalRevenue = sales.reduce((acc, sale) => acc + (sale.amount || 0), 0);
   
   const stats = [
     {
@@ -49,15 +59,15 @@ export default function ArtistDashboard() {
       trendUp: true,
     },
     {
-      icon: Users,
-      label: "Total Followers",
-      value: (profile?.followers?.length || 0).toString(),
+      icon: TrendingUp,
+      label: "Total Revenue",
+      value: `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
       trend: "All time",
       trendUp: true,
     },
     {
       icon: Zap,
-      label: "Active Auctions",
+      label: "Reviewing",
       value: activeAuctions.toString(),
       trend: "Current",
       trendUp: true,
@@ -65,36 +75,76 @@ export default function ArtistDashboard() {
     {
       icon: CheckCircle2,
       label: "Artworks Sold",
-      value: (profile?.itemsSold || 0).toString(),
+      value: sales.length.toString(),
       trend: "All time",
       trendUp: true,
     },
   ];
 
   // Map to recent artworks
-  const recentArtworks = artworks.slice(0, 4).map(a => ({
-    id: a._id,
-    name: a.title,
-    category: a.category,
-    date: a.date,
-    price: `$${a.price}`,
-    status: a.status || "Draft",
-    statusClass: (a.status?.toLowerCase() === "selling" || a.status?.toLowerCase() === "approved") 
-      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
-      : (a.status?.toLowerCase() === "reviewing")
-      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-      : "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
-  }));
+  const recentArtworks = [...artworks]
+    .sort((a, b) => {
+      const dateA = new Date(a.date || a.createdAt || 0).getTime();
+      const dateB = new Date(b.date || b.createdAt || 0).getTime();
+      return dateB - dateA;
+    })
+    .slice(0, 4)
+    .map(a => ({
+      id: a._id,
+      name: a.title,
+      category: a.category,
+      date: a.date || new Date().toLocaleDateString(),
+      price: `$${a.price}`,
+      status: a.status || "Draft",
+      statusClass: (a.status?.toLowerCase() === "selling" || a.status?.toLowerCase() === "approved") 
+        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
+        : (a.status?.toLowerCase() === "reviewing")
+        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+        : "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
+    }));
 
-  // Map to top artworks (placeholder using most expensive/recent)
-  const topArtworks = [...artworks].sort((a, b) => Number(b.price) - Number(a.price)).slice(0, 4).map(a => ({
-    id: a._id,
-    name: a.title,
-    category: a.category,
-    sales: 0,
-    revenue: `$${a.price}`,
-    image: a.image,
-  }));
+  // Map to top artworks (aggregated by real sales)
+  const topArtworksAgg = sales.reduce((acc, sale) => {
+    if (!acc[sale.title]) {
+      acc[sale.title] = { name: sale.title, sales: 0, revenue: 0 };
+    }
+    acc[sale.title].sales += 1;
+    acc[sale.title].revenue += (sale.amount || 0);
+    return acc;
+  }, {});
+
+  let topArtworks = Object.values(topArtworksAgg)
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 4)
+    .map(agg => {
+      const art = artworks.find(a => a.title === agg.name);
+      return {
+        id: agg.name,
+        name: agg.name,
+        category: art?.category || "Art",
+        sales: agg.sales,
+        revenue: `$${agg.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+        image: art?.image || "https://placehold.co/400",
+      };
+    });
+
+  // Pad to 4 artworks using most expensive if sales are less than 4
+  if (topArtworks.length < 4) {
+    const soldArtworkNames = topArtworks.map(t => t.name);
+    const unsoldArtworks = [...artworks]
+      .filter(a => !soldArtworkNames.includes(a.title))
+      .sort((a, b) => Number(b.price) - Number(a.price))
+      .slice(0, 4 - topArtworks.length)
+      .map(a => ({
+        id: a._id || a.title,
+        name: a.title,
+        category: a.category || "Art",
+        sales: 0,
+        revenue: `$${a.price}`,
+        image: a.image || "https://placehold.co/400",
+      }));
+    topArtworks = [...topArtworks, ...unsoldArtworks];
+  }
 
   if (sessionLoading || loading) {
     return (
