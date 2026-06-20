@@ -25,15 +25,28 @@ const AdminManageUsers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterRole]);
+
   const [isOpen, setIsOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
 
   const getRoleLabel = () => {
-    switch(filterRole) {
-      case "user": return "Role: User";
-      case "artist": return "Role: Artist";
-      case "admin": return "Role: Admin";
-      default: return "All Roles";
+    switch (filterRole) {
+      case "user":
+        return "Role: User";
+      case "artist":
+        return "Role: Artist";
+      case "admin":
+        return "Role: Admin";
+      default:
+        return "All Roles";
     }
   };
 
@@ -119,6 +132,20 @@ const AdminManageUsers = () => {
     return matchesSearch && matchesRole;
   });
 
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
   const getRoleIcon = (role) => {
     switch (role || "user") {
       case "admin":
@@ -152,25 +179,29 @@ const AdminManageUsers = () => {
   const handleExport = () => {
     try {
       const doc = new jsPDF();
-      
+
       doc.setFontSize(20);
       doc.setTextColor(41, 128, 185);
       doc.text("ArtVerse", 14, 22);
-      
+
       doc.setFontSize(11);
       doc.setTextColor(100);
       doc.text(`Manage Users`, 14, 30);
-      doc.text(`Generated on: ${new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })}`, 14, 36);
-      
+      doc.text(
+        `Generated on: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}`,
+        14,
+        36,
+      );
+
       const tableColumn = ["User Name", "Email", "Role", "Status"];
       const tableRows = [];
 
-      filteredUsers.forEach(user => {
+      filteredUsers.forEach((user) => {
         const rowData = [
           user.profileName || user.name || "Unknown",
           user.email,
           user.role || "user",
-          "Active"
+          "Active",
         ];
         tableRows.push(rowData);
       });
@@ -179,12 +210,12 @@ const AdminManageUsers = () => {
         head: [tableColumn],
         body: tableRows,
         startY: 45,
-        theme: 'striped',
+        theme: "striped",
         styles: { fontSize: 9, cellPadding: 3 },
         headStyles: { fillColor: [41, 128, 185] },
       });
 
-      doc.save(`users_${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.save(`users_${new Date().toISOString().split("T")[0]}.pdf`);
       toast.success("Exported to PDF successfully!");
     } catch (error) {
       console.error("Export error:", error);
@@ -244,7 +275,7 @@ const AdminManageUsers = () => {
                       { value: "all", label: "All Roles" },
                       { value: "user", label: "Role: User" },
                       { value: "artist", label: "Role: Artist" },
-                      { value: "admin", label: "Role: Admin" }
+                      { value: "admin", label: "Role: Admin" },
                     ].map((option) => (
                       <button
                         key={option.value}
@@ -266,7 +297,7 @@ const AdminManageUsers = () => {
               )}
             </div>
 
-            <button 
+            <button
               onClick={handleExport}
               disabled={filteredUsers.length === 0}
               className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-lg border border-separator bg-background px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-accent/40 text-foreground disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
@@ -324,8 +355,8 @@ const AdminManageUsers = () => {
                     </td>
                   </tr>
                 ))
-              ) : filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
+              ) : paginatedUsers.length > 0 ? (
+                paginatedUsers.map((user) => (
                   <tr
                     key={user._id || user.id}
                     className="block md:table-row hover:bg-muted/10 transition-colors group p-4 md:p-0"
@@ -449,16 +480,16 @@ const AdminManageUsers = () => {
           </table>
         </div>
 
-        {/* Pagination (Mock) */}
-        <div className="bg-muted/10 border-t border-separator px-6 py-4 flex items-center justify-between">
+        {/* Pagination */}
+        <div className="bg-muted/10 border-t border-separator px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-sm text-muted-foreground">
             Showing{" "}
             <span className="font-medium text-foreground">
-              {filteredUsers.length > 0 ? 1 : 0}
+              {filteredUsers.length > 0 ? startIndex + 1 : 0}
             </span>{" "}
             to{" "}
             <span className="font-medium text-foreground">
-              {filteredUsers.length}
+              {Math.min(startIndex + itemsPerPage, filteredUsers.length)}
             </span>{" "}
             of{" "}
             <span className="font-medium text-foreground">
@@ -468,14 +499,58 @@ const AdminManageUsers = () => {
           </div>
           <div className="flex gap-2">
             <button
-              className="px-3 py-1.5 text-sm font-medium text-foreground bg-background border border-separator rounded-lg hover:bg-muted/20 transition-colors disabled:opacity-50 shadow-sm"
-              disabled={true}
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1 || filteredUsers.length === 0}
+              className="px-3 py-1.5 text-sm font-medium text-foreground bg-background border border-separator rounded-lg hover:bg-muted/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               Previous
             </button>
+
+            <div className="hidden sm:flex gap-1">
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                // Show first, last, current, and adjacent pages
+                if (
+                  pageNum === 1 ||
+                  pageNum === totalPages ||
+                  (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                ) {
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                        currentPage === pageNum
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-foreground bg-background border border-separator hover:bg-muted/20"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                } else if (
+                  pageNum === currentPage - 2 ||
+                  pageNum === currentPage + 2
+                ) {
+                  return (
+                    <span
+                      key={pageNum}
+                      className="px-2 py-1.5 text-muted-foreground"
+                    >
+                      ...
+                    </span>
+                  );
+                }
+                return null;
+              })}
+            </div>
+
             <button
-              className="px-3 py-1.5 text-sm font-medium text-foreground bg-background border border-separator rounded-lg hover:bg-muted/20 transition-colors shadow-sm disabled:opacity-50"
-              disabled={true}
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={
+                currentPage === totalPages || filteredUsers.length === 0
+              }
+              className="px-3 py-1.5 text-sm font-medium text-foreground bg-background border border-separator rounded-lg hover:bg-muted/20 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>

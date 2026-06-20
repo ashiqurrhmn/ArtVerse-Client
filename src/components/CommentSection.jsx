@@ -19,7 +19,9 @@ export default function CommentSection({ id, user }) {
     if (!user?.email) return;
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/profiles/${encodeURIComponent(user.email)}`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/profiles/${encodeURIComponent(user.email)}`,
+        );
         if (res.ok) {
           const data = await res.json();
           setCurrentUserProfile(data);
@@ -37,7 +39,9 @@ export default function CommentSection({ id, user }) {
     const fetchComments = async () => {
       try {
         setIsLoadingComments(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/artworks/${id}/comments`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/artworks/${id}/comments`,
+        );
         if (res.ok) {
           const data = await res.json();
           setComments(data);
@@ -174,7 +178,9 @@ export default function CommentSection({ id, user }) {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    (currentUserProfile?.name || user.name || "U")[0].toUpperCase()
+                    (currentUserProfile?.name ||
+                      user.name ||
+                      "U")[0].toUpperCase()
                   )}
                 </div>
                 <div className="flex-1">
@@ -268,14 +274,11 @@ export default function CommentSection({ id, user }) {
                           </span>
                           <span className="size-1 rounded-full bg-separator/80"></span>
                           <span className="text-xs font-medium text-muted-foreground">
-                            {new Date(c.createdAt).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              },
-                            )}
+                            {new Date(c.createdAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
                           </span>
                           {c.updatedAt && (
                             <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest bg-accent px-1.5 py-0.5 rounded-md">

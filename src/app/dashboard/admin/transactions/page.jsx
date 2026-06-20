@@ -14,6 +14,15 @@ const AdminTransactions = () => {
   const [sortBy, setSortBy] = useState("date-desc");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Reset to page 1 when filters or tabs change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sortBy, activeTab]);
+
   const [subscriptions, setSubscriptions] = useState([]);
 
   const getSortLabel = () => {
@@ -84,6 +93,24 @@ const AdminTransactions = () => {
       (sub.email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (sub.id || "").toLowerCase().includes(searchQuery.toLowerCase()),
   ).sort(sortData);
+
+  // Pagination Logic
+  const activeData = activeTab === "artworks" ? filteredPurchases : filteredSubscriptions;
+  const totalPages = Math.ceil(activeData.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  
+  const paginatedPurchases = activeTab === "artworks" 
+    ? filteredPurchases.slice(startIndex, startIndex + itemsPerPage) 
+    : [];
+  const paginatedSubscriptions = activeTab === "subscriptions" 
+    ? filteredSubscriptions.slice(startIndex, startIndex + itemsPerPage) 
+    : [];
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   const handleExport = () => {
     try {
@@ -273,8 +300,8 @@ const AdminTransactions = () => {
                         </div>
                       </td>
                     </tr>
-                  ) : filteredPurchases.length > 0 ? (
-                    filteredPurchases.map((pur) => (
+                  ) : paginatedPurchases.length > 0 ? (
+                    paginatedPurchases.map((pur) => (
                       <tr
                         key={pur.id}
                         className="hover:bg-muted/10 transition-colors group"
@@ -367,8 +394,8 @@ const AdminTransactions = () => {
                         </div>
                       </td>
                     </tr>
-                  ) : filteredSubscriptions.length > 0 ? (
-                    filteredSubscriptions.map((sub) => (
+                  ) : paginatedSubscriptions.length > 0 ? (
+                    paginatedSubscriptions.map((sub) => (
                       <tr
                         key={sub.id}
                         className="hover:bg-muted/10 transition-colors group"
@@ -427,6 +454,77 @@ const AdminTransactions = () => {
           </div>
         </div>
       )}
+
+      {/* Pagination */}
+      <div className="bg-muted/10 border border-separator rounded-2xl px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 mt-4">
+        <div className="text-sm text-muted-foreground">
+          Showing{" "}
+          <span className="font-medium text-foreground">
+            {activeData.length > 0 ? startIndex + 1 : 0}
+          </span>{" "}
+          to{" "}
+          <span className="font-medium text-foreground">
+            {Math.min(startIndex + itemsPerPage, activeData.length)}
+          </span>{" "}
+          of{" "}
+          <span className="font-medium text-foreground">
+            {activeData.length}
+          </span>{" "}
+          transactions
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1 || activeData.length === 0}
+            className="px-3 py-1.5 text-sm font-medium text-foreground bg-background border border-separator rounded-lg hover:bg-muted/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          >
+            Previous
+          </button>
+
+          <div className="hidden sm:flex gap-1">
+            {[...Array(totalPages)].map((_, i) => {
+              const pageNum = i + 1;
+              if (
+                pageNum === 1 ||
+                pageNum === totalPages ||
+                (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+              ) {
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                      currentPage === pageNum
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-foreground bg-background border border-separator hover:bg-muted/20"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              } else if (
+                pageNum === currentPage - 2 ||
+                pageNum === currentPage + 2
+              ) {
+                return (
+                  <span key={pageNum} className="px-2 py-1.5 text-muted-foreground">
+                    ...
+                  </span>
+                );
+              }
+              return null;
+            })}
+          </div>
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages || activeData.length === 0}
+            className="px-3 py-1.5 text-sm font-medium text-foreground bg-background border border-separator rounded-lg hover:bg-muted/20 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

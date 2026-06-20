@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getArtworks } from "@/lib/api/artworks";
-import { Search, Filter, SlidersHorizontal, ImageIcon, ChevronDown } from "lucide-react";
+import { Search, Filter, SlidersHorizontal, ImageIcon, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import ArtworkCard from "@/components/ArtworkCard";
 
 const categories = [
@@ -23,6 +23,15 @@ export default function BrowseArtworksPage() {
   const [maxPrice, setMaxPrice] = useState("");
   const [sortOption, setSortOption] = useState("newest");
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, categoryFilter, minPrice, maxPrice, sortOption]);
 
   useEffect(() => {
     const fetchArtworks = async () => {
@@ -71,6 +80,18 @@ export default function BrowseArtworksPage() {
   } else if (sortOption === "price-desc") {
     filteredArtworks.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
   }
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredArtworks.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedArtworks = filteredArtworks.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   return (
     <main className="min-h-screen bg-background pt-10 pb-20 px-4 md:px-30">
@@ -206,10 +227,71 @@ export default function BrowseArtworksPage() {
                 ))}
               </div>
             ) : filteredArtworks.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
-                {filteredArtworks.map((artwork, index) => (
-                  <ArtworkCard key={artwork._id} artwork={artwork} index={index} />
-                ))}
+              <div className="flex flex-col gap-8">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+                  {paginatedArtworks.map((artwork, index) => (
+                    <ArtworkCard key={artwork._id} artwork={artwork} index={index} />
+                  ))}
+                </div>
+                
+                {/* ── PAGINATION CONTROLS ── */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-4">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="flex size-10 items-center justify-center rounded-xl border border-separator/60 bg-background hover:bg-accent/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft className="size-5" />
+                    </button>
+
+                    <div className="flex items-center gap-1.5 overflow-x-auto max-w-[60vw] sm:max-w-none px-2 scrollbar-hide">
+                      {[...Array(totalPages)].map((_, i) => {
+                        const pageNum = i + 1;
+                        // Show first, last, current, and adjacent pages
+                        if (
+                          pageNum === 1 ||
+                          pageNum === totalPages ||
+                          (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                        ) {
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => handlePageChange(pageNum)}
+                              className={`flex size-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold transition-colors ${
+                                currentPage === pageNum
+                                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                                  : "border border-separator/60 bg-background hover:bg-accent/50 text-foreground"
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        } else if (
+                          pageNum === currentPage - 2 ||
+                          pageNum === currentPage + 2
+                        ) {
+                          return (
+                            <span key={pageNum} className="px-1 text-muted-foreground">
+                              ...
+                            </span>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="flex size-10 items-center justify-center rounded-xl border border-separator/60 bg-background hover:bg-accent/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Next page"
+                    >
+                      <ChevronRight className="size-5" />
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6">
