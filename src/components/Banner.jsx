@@ -60,23 +60,23 @@ export default function Banner() {
           </motion.p>
 
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center gap-5">
-            <Button
-              as={Link}
-              href="#"
-              radius="full"
-              className="bg-primary text-primary-foreground px-8 py-5 sm:px-12 sm:py-7 font-bold text-base sm:text-lg w-full sm:w-auto shadow-lg hover:shadow-2xl hover:shadow-primary/40 hover:-translate-y-1 transition-all duration-300 active:scale-95"
-            >
-              Shop Now
-            </Button>
-            <Button
-              as={Link}
-              href="/explore"
-              radius="full"
-              variant="bordered"
-              className="border-2 border-[#FCF7EE] text-[#FCF7EE] px-8 py-5 sm:px-10 sm:py-7 font-bold text-base sm:text-lg w-full sm:w-auto shadow-lg hover:shadow-2xl hover:-translate-y-1 hover:bg-[#FCF7EE] hover:text-primary transition-all duration-300 backdrop-blur-sm active:scale-95 group"
-            >
-              Browse Artworks <ArrowRight size={20} className="ml-2 transition-transform duration-300 group-hover:translate-x-1.5" />
-            </Button>
+            <Link href="/browse" className="w-full sm:w-auto">
+              <Button
+                radius="full"
+                className="bg-primary text-primary-foreground px-8 py-5 sm:px-12 sm:py-7 font-bold text-base sm:text-lg w-full sm:w-auto shadow-lg hover:shadow-2xl hover:shadow-primary/40 hover:-translate-y-1 transition-all duration-300 active:scale-95"
+              >
+                Shop Now
+              </Button>
+            </Link>
+            <Link href="/browse" className="w-full sm:w-auto group">
+              <Button
+                radius="full"
+                variant="bordered"
+                className="border-2 border-[#FCF7EE] text-[#FCF7EE] px-8 py-5 sm:px-10 sm:py-7 font-bold text-base sm:text-lg w-full sm:w-auto shadow-lg hover:shadow-2xl hover:-translate-y-1 hover:bg-[#FCF7EE] hover:text-primary transition-all duration-300 backdrop-blur-sm active:scale-95"
+              >
+                Browse Artworks <ArrowRight size={20} className="ml-2 transition-transform duration-300 group-hover:translate-x-1.5" />
+              </Button>
+            </Link>
           </motion.div>
         </motion.div>
       </section>

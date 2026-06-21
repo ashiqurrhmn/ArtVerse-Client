@@ -8,9 +8,14 @@ import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 
 export default function PricingSection() {
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const user = session?.user;
-  const isNotBuyer = user && user.role !== "buyer";
+  const isNotBuyer = mounted ? (user && user.role !== "buyer") : false;
 
   // Fetch plan directly from DB to bypass JWT cookie cache
   const [userPlan, setUserPlan] = useState("free");
@@ -132,7 +137,8 @@ export default function PricingSection() {
         >
           {plans.map((plan) => {
             const planOrder = { free: 0, pro: 1, premium: 2 };
-            const userPlanLevel = planOrder[userPlan.toLowerCase()] ?? 0;
+            const safeUserPlan = mounted ? userPlan : "free";
+            const userPlanLevel = planOrder[safeUserPlan.toLowerCase()] ?? 0;
             const currentPlanLevel = planOrder[plan.id.toLowerCase()] ?? 0;
 
             const isCurrentPlan = userPlanLevel === currentPlanLevel;
