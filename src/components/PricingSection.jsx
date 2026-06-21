@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@heroui/react";
+import { Button, Link } from "@heroui/react";
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { authClient } from "@/lib/auth-client";
@@ -23,17 +23,19 @@ export default function PricingSection() {
   }, [session]);
 
   const handleActionClick = (e) => {
+    if (!user) {
+      if (e) e.preventDefault();
+      toast.error("Please log in to choose a plan.");
+      return;
+    }
+
     if (isNotBuyer) {
       if (e) e.preventDefault();
       toast.error(
-        "Subscriptions and pricing plans are exclusively for buyers.",
-        {
-          position: "bottom-center",
-        },
+        "Subscriptions and pricing plans are exclusively for buyers."
       );
       return;
     }
-    // Add logic for buyers here later
   };
 
   const plans = [
@@ -248,12 +250,11 @@ export default function PricingSection() {
               exclusive benefits in our art community.
             </p>
 
-            <Button
-              onClick={handleActionClick}
-              className={`mt-10 rounded-full bg-primary px-10 py-6 font-bold text-primary-foreground shadow-md transition-all text-base ${isNotBuyer ? "opacity-60 cursor-not-allowed" : "hover:bg-primary/90 hover:scale-105 active:scale-95"}`}
+            <Link href="/pricing"
+              className={`mt-10 rounded-full  bg-primary px-10 py-3 font-bold text-primary-foreground shadow-md transition-all text-base ${isNotBuyer ? "opacity-60 cursor-not-allowed" : "hover:bg-primary/90 hover:scale-105 active:scale-95"}`}
             >
               {isNotBuyer ? "Only for Buyers" : "Get Started"}
-            </Button>
+            </Link>
           </div>
         </motion.div>
       </section>

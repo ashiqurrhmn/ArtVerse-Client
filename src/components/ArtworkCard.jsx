@@ -49,7 +49,7 @@ export default function ArtworkCard({ artwork, index }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setIsSaved(data.saved);
-      toast.success(data.saved ? "Artwork saved!" : "Removed from saved", { position: "bottom-right", duration: 2000 });
+      toast.success(data.saved ? "Artwork saved!" : "Removed from saved", { duration: 2000 });
     } catch (e) {
       console.error(e);
       // Revert optimistic update

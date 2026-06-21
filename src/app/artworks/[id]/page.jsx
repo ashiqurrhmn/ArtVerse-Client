@@ -76,7 +76,6 @@ export default function ArtworkDetailsPage() {
       if (!res.ok) throw new Error(data.error);
       setIsSaved(data.saved);
       toast.success(data.saved ? "Artwork saved!" : "Removed from saved", {
-        position: "bottom-right",
         duration: 2000,
       });
     } catch (e) {
@@ -161,15 +160,11 @@ export default function ArtworkDetailsPage() {
 
   const handlePurchase = async () => {
     if (!user) {
-      toast.error("Please sign in to purchase artwork.", {
-        position: "bottom-center",
-      });
+      toast.error("Please sign in to purchase artwork.");
       return;
     }
     if (user.role !== "buyer") {
-      toast.error("Only buyers can purchase artworks.", {
-        position: "bottom-center",
-      });
+      toast.error("Only buyers can purchase artworks.");
       return;
     }
 
@@ -194,8 +189,7 @@ export default function ArtworkDetailsPage() {
         window.location.href = data.url;
       } else {
         toast.error(
-          data.error || data.message || "Failed to create checkout session.",
-          { position: "bottom-center" },
+          data.error || data.message || "Failed to create checkout session."
         );
         setIsPurchasing(false);
       }

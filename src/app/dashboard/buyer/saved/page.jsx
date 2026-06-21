@@ -100,7 +100,7 @@ export default function SavedArtworksPage() {
       });
       if (res.ok) {
         setSavedArtworks(prev => prev.filter(a => a._id !== artworkId));
-        toast.success("Removed from saved artworks", { position: "bottom-right", duration: 2000 });
+        toast.success("Removed from saved artworks", { duration: 2000 });
       }
     } catch (e) {
       console.error(e);
