@@ -1,6 +1,6 @@
 "use client";
 import { authClient } from "@/lib/auth-client";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
 
 export default function SignInPage() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = async (e) => {
@@ -20,11 +21,18 @@ export default function SignInPage() {
     try {
       const { data, error } = await authClient.signIn.email({
         ...user,
-        callbackURL: "/",
       });
 
       if (error) {
         toast.error(error.message || "Failed to sign in");
+      } else if (data?.user) {
+        if (data.user.role === "buyer") {
+          router.push("/");
+        } else if (data.user.role === "artist" || data.user.role === "admin") {
+          router.push(`/dashboard/${data.user.role}`);
+        } else {
+          router.push("/");
+        }
       }
     } catch (error) {
       toast.error(error?.message || "An unexpected error occurred");
@@ -34,9 +42,21 @@ export default function SignInPage() {
     }
   };
     const handleGoogleSignIn = async () => {
-      const data = await authClient.signIn.social({
-      provider: "google",
-    });
+      const { data, error } = await authClient.signIn.social({
+        provider: "google",
+      });
+
+      if (error) {
+        toast.error(error.message || "Failed to sign in with Google");
+      } else if (data?.user) {
+        if (data.user.role === "buyer") {
+          router.push("/");
+        } else if (data.user.role === "artist" || data.user.role === "admin") {
+          router.push(`/dashboard/${data.user.role}`);
+        } else {
+          router.push("/");
+        }
+      }
     };
 
   return (
