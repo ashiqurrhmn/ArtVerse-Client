@@ -31,6 +31,8 @@ const AdminManageArtworks = () => {
     switch (sortBy) {
       case "price-asc": return "Price: Low to High";
       case "price-desc": return "Price: High to Low";
+      case "date-newest": return "Date: Newest First";
+      case "date-oldest": return "Date: Oldest First";
       default: return "Sort by: Default";
     }
   };
@@ -119,6 +121,15 @@ const AdminManageArtworks = () => {
   const sortedArtworks = [...filteredArtworks].sort((a, b) => {
     if (sortBy === "price-asc") return (a.price || 0) - (b.price || 0);
     if (sortBy === "price-desc") return (b.price || 0) - (a.price || 0);
+    
+    if (sortBy === "date-newest" || sortBy === "date-oldest") {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : (a._id ? parseInt(a._id.substring(0, 8), 16) * 1000 : 0);
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : (b._id ? parseInt(b._id.substring(0, 8), 16) * 1000 : 0);
+      
+      if (sortBy === "date-newest") return dateB - dateA;
+      if (sortBy === "date-oldest") return dateA - dateB;
+    }
+    
     return 0;
   });
 
@@ -232,7 +243,9 @@ const AdminManageArtworks = () => {
                     {[
                       { value: "default", label: "Sort by: Default" },
                       { value: "price-asc", label: "Price: Low to High" },
-                      { value: "price-desc", label: "Price: High to Low" }
+                      { value: "price-desc", label: "Price: High to Low" },
+                      { value: "date-newest", label: "Date: Newest First" },
+                      { value: "date-oldest", label: "Date: Oldest First" }
                     ].map((option) => (
                       <button
                         key={option.value}

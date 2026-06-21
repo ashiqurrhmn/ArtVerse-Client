@@ -30,6 +30,24 @@ const PublicArtistProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isFollowingToggle, setIsFollowingToggle] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(9);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 640) {
+        setItemsPerPage(10);
+      } else {
+        setItemsPerPage(9);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const { data: session } = authClient.useSession();
   const currentUser = session?.user;
   const { profile: loggedInProfile } = useProfile();
@@ -191,6 +209,17 @@ const PublicArtistProfilePage = () => {
     .slice(0, 2);
   const profileImage = profile?.profileImage;
   const coverImage = profile?.coverImage;
+
+  // Pagination logic
+  const totalPages = Math.ceil(artworks.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedArtworks = artworks.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   return (
     <div className="min-h-screen pb-20">
@@ -385,14 +414,72 @@ const PublicArtistProfilePage = () => {
               </div>
 
               {artworks.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {artworks.map((artwork, index) => (
-                    <ArtworkCard
-                      key={artwork._id}
-                      artwork={artwork}
-                      index={index}
-                    />
-                  ))}
+                <div className="space-y-8">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+                    {paginatedArtworks.map((artwork, index) => (
+                      <ArtworkCard
+                        key={artwork._id}
+                        artwork={artwork}
+                        index={index}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 pt-4">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 text-sm font-medium text-foreground bg-background border border-separator rounded-xl hover:bg-muted/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                      >
+                        Previous
+                      </button>
+                      
+                      <div className="hidden sm:flex gap-1">
+                        {[...Array(totalPages)].map((_, i) => {
+                          const pageNum = i + 1;
+                          if (
+                            pageNum === 1 ||
+                            pageNum === totalPages ||
+                            (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                          ) {
+                            return (
+                              <button
+                                key={pageNum}
+                                onClick={() => handlePageChange(pageNum)}
+                                className={`size-9 flex items-center justify-center text-sm font-medium rounded-xl transition-colors ${
+                                  currentPage === pageNum
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "text-foreground bg-background border border-separator hover:bg-muted/20"
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            );
+                          } else if (
+                            pageNum === currentPage - 2 ||
+                            pageNum === currentPage + 2
+                          ) {
+                            return (
+                              <span key={pageNum} className="px-1 py-2 text-muted-foreground">
+                                ...
+                              </span>
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 text-sm font-medium text-foreground bg-background border border-separator rounded-xl hover:bg-muted/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="rounded-3xl border border-separator/60 border-dashed bg-background/30 p-12 text-center">

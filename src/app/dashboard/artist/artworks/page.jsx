@@ -9,7 +9,9 @@ import {
   Pencil,
   Trash2,
   ImageIcon,
+  ArrowUpDown,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { getArtworks } from "@/lib/api/artworks";
 import { deleteArtwork } from "@/lib/actions/artworks";
@@ -23,8 +25,19 @@ const ManageArtworksPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("default");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const getSortLabel = () => {
+    switch (sortOption) {
+      case "price-asc": return "Price: Low to High";
+      case "price-desc": return "Price: High to Low";
+      case "date-newest": return "Date: Newest First";
+      case "date-oldest": return "Date: Oldest First";
+      default: return "Sort by: Default";
+    }
+  };
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -197,36 +210,52 @@ const ManageArtworksPage = () => {
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className="relative flex-1 sm:flex-none">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                <Filter className="size-4" />
-              </div>
-              <select
-                value={sortOption}
-                onChange={(e) => setSortOption(e.target.value)}
-                className="w-full sm:w-auto appearance-none rounded-lg border border-separator bg-background pl-9 pr-8 py-2.5 text-sm font-semibold text-foreground outline-none transition-colors hover:bg-accent/40 focus:border-primary focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            <div className="relative w-full sm:w-auto">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full sm:w-auto flex items-center justify-between gap-2 pl-4 pr-3 py-2.5 bg-background border border-separator rounded-xl text-sm font-semibold text-foreground hover:bg-muted/10 transition-colors shadow-sm cursor-pointer outline-none focus:border-primary focus:ring-1 focus:ring-primary min-w-[170px]"
               >
-                <option value="default">Sort by: Default</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-                <option value="date-newest">Date: Newest First</option>
-                <option value="date-oldest">Date: Oldest First</option>
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </div>
+                <span>{getSortLabel()}</span>
+                <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+              </button>
+
+              {isDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsDropdownOpen(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 top-full mt-2 w-full min-w-[170px] bg-background border border-separator rounded-xl shadow-xl overflow-hidden z-50 py-1"
+                  >
+                    {[
+                      { value: "default", label: "Sort by: Default" },
+                      { value: "price-asc", label: "Price: Low to High" },
+                      { value: "price-desc", label: "Price: High to Low" },
+                      { value: "date-newest", label: "Date: Newest First" },
+                      { value: "date-oldest", label: "Date: Oldest First" }
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setSortOption(option.value);
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted/20 ${
+                          sortOption === option.value
+                            ? "font-bold text-primary bg-primary/5"
+                            : "text-foreground font-medium"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </motion.div>
+                </>
+              )}
             </div>
           </div>
         </div>
