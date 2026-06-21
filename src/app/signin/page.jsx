@@ -76,7 +76,7 @@ const SignInPage = () => {
           <div className="flex-1 flex items-center justify-center w-full">
             <div className="w-full h-full">
               <Image
-                src="/Assets/singin_image"
+                src="/Assets/singin_image.jpg"
                 alt="ArtVerse illustration"
                 fill
                 className="object-cover drop-shadow-lg"

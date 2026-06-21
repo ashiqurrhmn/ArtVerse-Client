@@ -72,7 +72,7 @@ const SignUpPage = () => {
           <div className="flex-1 flex items-center justify-center w-full">
             <div className="w-72 h-72 ">
               <Image
-                src="/Assets/singup"
+                src="/Assets/singup.jpg"
                 alt="ArtVerse illustration"
                 fill
                 className="object-cover drop-shadow-lg"
