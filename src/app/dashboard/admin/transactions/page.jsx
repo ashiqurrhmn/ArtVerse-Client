@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { motion } from "framer-motion";
+import { getAdminPurchases, getAdminSubscriptions } from "@/lib/api/admin";
 
 const AdminTransactions = () => {
   const [purchases, setPurchases] = useState([]);
@@ -42,19 +43,13 @@ const AdminTransactions = () => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const [purchasesRes, subscriptionsRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/purchases`),
-        fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/subscriptions`)
+      const [purchasesData, subscriptionsData] = await Promise.all([
+        getAdminPurchases(),
+        getAdminSubscriptions()
       ]);
       
-      if (!purchasesRes.ok) throw new Error("Failed to fetch purchases");
-      if (!subscriptionsRes.ok) throw new Error("Failed to fetch subscriptions");
-      
-      const purchasesData = await purchasesRes.json();
-      const subscriptionsData = await subscriptionsRes.json();
-      
-      setPurchases(purchasesData);
-      setSubscriptions(subscriptionsData);
+      setPurchases(purchasesData || []);
+      setSubscriptions(subscriptionsData || []);
     } catch (error) {
       console.error("Error fetching transactions:", error);
       toast.error("Failed to load transactions");

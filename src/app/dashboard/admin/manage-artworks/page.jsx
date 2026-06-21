@@ -6,6 +6,7 @@ import { Modal, Button, Skeleton } from "@heroui/react";
 import { motion } from "framer-motion";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { deleteArtworkAdmin, updateArtworkStatus } from "@/lib/api/admin";
 
 const AdminManageArtworks = () => {
   const [artworks, setArtworks] = useState([]);
@@ -64,14 +65,7 @@ const AdminManageArtworks = () => {
 
     const loadingToast = toast.loading("Deleting artwork...");
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/artworks/${artworkToDelete._id}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      if (!res.ok) throw new Error("Failed to delete artwork");
+      await deleteArtworkAdmin(artworkToDelete._id);
 
       setArtworks((prev) =>
         prev.filter((art) => art._id !== artworkToDelete._id),
@@ -88,16 +82,7 @@ const AdminManageArtworks = () => {
   const handleUpdateStatus = async (id, newStatus) => {
     const loadingToast = toast.loading(`Updating status to ${newStatus}...`);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/artworks/${id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus }),
-        },
-      );
-
-      if (!res.ok) throw new Error("Failed to update status");
+      await updateArtworkStatus(id, newStatus);
 
       setArtworks((prev) =>
         prev.map((art) => (art._id === id ? { ...art, status: newStatus } : art)),

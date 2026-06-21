@@ -14,6 +14,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import { getAdminStats } from "@/lib/api/admin";
 
 const COLORS = [
   "var(--app-primary)",
@@ -26,7 +27,8 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalArtists: 0,
-    artworksSold: 0,
+    totalArtworks: 0,
+    pendingApprovals: 0,
     totalRevenue: 0,
     salesData: [],
     categoryData: []
@@ -34,16 +36,24 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"}/api/admin/stats`)
-      .then(res => res.json())
+    getAdminStats()
       .then(data => {
-        setStats(data || {});
-        setLoading(false);
+        if (data && !data.error) {
+          setStats({
+            totalUsers: data.totalUsers || 0,
+            totalArtists: data.totalArtists || 0,
+            totalArtworks: data.totalArtworks || 0,
+            pendingApprovals: data.pendingApprovals || 0,
+            totalRevenue: data.totalRevenue || 0,
+            salesData: data.salesData || [],
+            categoryData: data.categoryData || []
+          });
+        }
       })
       .catch(err => {
         console.error("Failed to fetch admin stats", err);
-        setLoading(false);
-      });
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) {

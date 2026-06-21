@@ -17,6 +17,7 @@ import { Modal, Button, Skeleton } from "@heroui/react";
 import { motion } from "framer-motion";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { getUsers, updateUserRole, deleteUser } from "@/lib/api/admin";
 
 const AdminManageUsers = () => {
   const [users, setUsers] = useState([]);
@@ -56,9 +57,7 @@ const AdminManageUsers = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/users`);
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
+      const data = await getUsers();
       setUsers(data);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -71,16 +70,7 @@ const AdminManageUsers = () => {
   const handleRoleChange = async (userId, newRole) => {
     const loadingToast = toast.loading("Updating role...");
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${userId}/role`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ role: newRole }),
-        },
-      );
-
-      if (!res.ok) throw new Error("Failed to update role");
+      await updateUserRole(userId, newRole);
 
       setUsers((prev) =>
         prev.map((u) => (u._id === userId ? { ...u, role: newRole } : u)),
@@ -102,14 +92,7 @@ const AdminManageUsers = () => {
 
     const loadingToast = toast.loading("Deleting user...");
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${userToDelete._id}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      if (!res.ok) throw new Error("Failed to delete user");
+      await deleteUser(userToDelete._id);
 
       setUsers((prev) => prev.filter((u) => u._id !== userToDelete._id));
       toast.success("User deleted successfully", { id: loadingToast });
