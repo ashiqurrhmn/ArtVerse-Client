@@ -22,6 +22,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { authClient } from "@/lib/auth-client";
+import { deleteArtworkAdmin } from "@/lib/api/admin";
 import CommentSection from "@/components/CommentSection";
 
 const ArtworkDetailsPage = () => {
@@ -35,6 +36,8 @@ const ArtworkDetailsPage = () => {
   const [purchaseStats, setPurchaseStats] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { data: session } = authClient.useSession();
   const user = session?.user;
 
@@ -197,6 +200,21 @@ const ArtworkDetailsPage = () => {
       console.error("Purchase error:", error);
       toast.error("Something went wrong. Please try again.");
       setIsPurchasing(false);
+    }
+  };
+
+  const handleDeleteArtwork = async () => {
+    setIsDeleting(true);
+    const loadingToast = toast.loading("Deleting artwork...");
+    try {
+      await deleteArtworkAdmin(id);
+      toast.success("Artwork deleted successfully", { id: loadingToast });
+      router.push("/dashboard/artist/artworks");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete artwork", { id: loadingToast });
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
     }
   };
 
@@ -453,6 +471,31 @@ const ArtworkDetailsPage = () => {
                 </div>
               </div>
 
+              {/* Artist Controls */}
+              {user && user.email === artwork.email && user.role === "artist" && (
+                <div className="mb-8 pt-6 border-t border-separator/60">
+                  <h3 className="text-sm font-bold text-foreground mb-4 uppercase tracking-widest">
+                    Artist Controls
+                  </h3>
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <Link
+                      href={`/dashboard/artist/artworks/edit/${artwork._id}`}
+                      className="flex-1 w-full flex items-center justify-center gap-2 rounded-xl border border-separator/60 bg-background px-4 py-3 text-sm font-bold text-foreground hover:bg-muted/50 transition-colors shadow-sm"
+                    >
+                      <Pencil className="size-4" />
+                      Edit Artwork
+                    </Link>
+                    <button
+                      onClick={() => setIsDeleteModalOpen(true)}
+                      className="flex-1 w-full flex items-center justify-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/20 transition-colors shadow-sm"
+                    >
+                      <Trash2 className="size-4" />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Description */}
               <div className="mb-8">
                 <h3 className="text-lg font-bold text-foreground mb-3">
@@ -487,6 +530,48 @@ const ArtworkDetailsPage = () => {
         {/* ── Comment Section ── */}
         <CommentSection id={id} user={user} />
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md rounded-3xl border border-separator/60 bg-background p-6 md:p-8 shadow-2xl"
+          >
+            <div className="flex size-14 items-center justify-center rounded-full bg-red-500/10 mb-6 mx-auto">
+              <Trash2 className="size-6 text-red-500" />
+            </div>
+            <h2 className="text-2xl font-bold text-foreground text-center mb-2">Delete Artwork?</h2>
+            <p className="text-muted-foreground text-center mb-8">
+              Are you sure you want to permanently delete "{artwork.title}"? This action cannot be undone.
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                disabled={isDeleting}
+                className="flex-1 rounded-xl border border-separator bg-background py-3 font-bold text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteArtwork}
+                disabled={isDeleting}
+                className="flex-1 rounded-xl bg-red-500 py-3 font-bold text-white hover:bg-red-600 transition-colors shadow-lg shadow-red-500/25 flex justify-center items-center gap-2 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </main>
   );
 }
