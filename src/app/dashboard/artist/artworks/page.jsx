@@ -34,8 +34,6 @@ const ManageArtworksPage = () => {
     setCurrentPage(1);
   }, [searchTerm, sortOption]);
 
- console.log(session)
-
   useEffect(() => {
     const fetchArtworks = async () => {
       try {

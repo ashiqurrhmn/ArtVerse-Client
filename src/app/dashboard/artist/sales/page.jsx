@@ -7,6 +7,7 @@ import { authClient } from "@/lib/auth-client";
 import { motion } from "framer-motion";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { getSales } from "@/lib/api/artworks";
 
 const SalesHistoryPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,10 +46,7 @@ const SalesHistoryPage = () => {
 
     const fetchSales = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"}/api/sales/${encodeURIComponent(user.email)}`,
-        );
-        const data = await res.json();
+        const data = await getSales(user.email);
         setSales(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Failed to fetch sales", error);

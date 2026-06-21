@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ExternalLink, ImageIcon, Sparkles, ArrowRight } from "lucide-react";
-import { Button } from "@heroui/react";
 
 const FeaturedArtworks = () => {
   const [artworks, setArtworks] = useState([]);
@@ -131,15 +130,13 @@ const FeaturedArtworks = () => {
                 </div>
                 {/* View Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4 md:p-6">
-                  <Button
-                    as={Link}
+                  <Link
                     href={`/artworks/${artwork._id}`}
-                    radius="full"
-                    className="w-full bg-primary text-primary-foreground font-bold shadow-lg hover:shadow-2xl hover:shadow-primary/40 hover:-translate-y-1 transition-all duration-300 text-xs md:text-sm py-2 md:py-3 h-auto"
+                    className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold shadow-lg rounded-full hover:shadow-2xl hover:shadow-primary/40 hover:-translate-y-1 transition-all duration-300 text-xs md:text-sm py-2 md:py-3 h-auto"
                   >
                     View Masterpiece
                     <ExternalLink className="w-3 h-3 md:w-4 md:h-4 ml-1" />
-                  </Button>
+                  </Link>
                 </div>
               </div>
 
@@ -181,15 +178,12 @@ const FeaturedArtworks = () => {
       )}
       
       <div className="mt-16 text-center">
-        <Button
-          as={Link}
+        <Link
           href="/browse"
-          radius="full"
-          variant="bordered"
-          className="border-2 border-foreground text-foreground px-6 py-4 md:px-8 md:py-6 font-bold text-sm md:text-lg w-full sm:w-auto shadow-lg hover:shadow-2xl hover:-translate-y-1 hover:bg-foreground hover:text-background transition-all duration-300 group"
+          className="inline-flex items-center justify-center border-2 border-foreground text-foreground px-6 py-4 md:px-8 md:py-3 font-bold text-sm md:text-lg w-full sm:w-auto shadow-lg rounded-full hover:shadow-2xl hover:-translate-y-1 hover:bg-foreground hover:text-background transition-all duration-300 group"
         >
           Explore All Artworks <ArrowRight size={20} className="ml-2 transition-transform duration-300 group-hover:translate-x-1.5" />
-        </Button>
+        </Link>
       </div>
     </section>
   );

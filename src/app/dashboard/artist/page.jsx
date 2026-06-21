@@ -13,7 +13,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useProfile } from "@/context/ProfileContext";
-import { getArtworks } from "@/lib/api/artworks";
+import { getArtworks, getSales } from "@/lib/api/artworks";
 
 const ArtistDashboard = () => {
   const { data: session, isPending: sessionLoading } = authClient.useSession();
@@ -27,11 +27,9 @@ const ArtistDashboard = () => {
   useEffect(() => {
     if (user?.email) {
       const fetchArtworks = getArtworks(user.email);
-      const fetchSales = fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"}/api/sales/${encodeURIComponent(user.email)}`,
-      ).then((res) => res.json());
+      const fetchSalesData = getSales(user.email);
 
-      Promise.all([fetchArtworks, fetchSales])
+      Promise.all([fetchArtworks, fetchSalesData])
         .then(([artworksData, salesData]) => {
           setArtworks(artworksData || []);
           setSales(salesData || []);
