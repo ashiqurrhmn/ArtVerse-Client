@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { getArtworks } from "@/lib/api/artworks";
 import { Search, Filter, SlidersHorizontal, ImageIcon, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import ArtworkCard from "@/components/ArtworkCard";
@@ -11,14 +12,27 @@ const categories = [
   { key: "digital", label: "Digital Art" },
   { key: "sculpture", label: "Sculpture" },
   { key: "mixed", label: "Mixed Media" },
+  { key: "abstract", label: "Abstract" },
+  { key: "watercolor", label: "Watercolor" },
 ];
 
-const BrowseArtworksPage = () => {
+const BrowseArtworksContent = () => {
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get("category");
+  
+  let initialCategory = "all";
+  if (categoryParam) {
+    const matched = categories.find(
+      (c) => c.label.toLowerCase() === categoryParam.toLowerCase() || c.key.toLowerCase() === categoryParam.toLowerCase()
+    );
+    if (matched) initialCategory = matched.key;
+  }
+
   const [artworks, setArtworks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState(initialCategory);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [sortOption, setSortOption] = useState("newest");
@@ -310,5 +324,17 @@ const BrowseArtworksPage = () => {
     </main>
   );
 }
+
+const BrowseArtworksPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background pt-10 flex justify-center items-start">
+        <div className="mt-20 size-10 animate-spin rounded-full border-4 border-primary/20 border-t-primary"></div>
+      </div>
+    }>
+      <BrowseArtworksContent />
+    </Suspense>
+  );
+};
 
 export default BrowseArtworksPage;
