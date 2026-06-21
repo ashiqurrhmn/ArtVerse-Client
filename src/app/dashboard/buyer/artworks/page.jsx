@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import { ExternalLink, Search, Filter, ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
+import { getPurchases } from "@/lib/api/buyer";
+
 const BoughtArtworksPage = () => {
   const [purchases, setPurchases] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,11 +45,8 @@ const BoughtArtworksPage = () => {
 
     const fetchPurchases = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/purchases?email=${encodeURIComponent(user.email)}`,
-        );
-        const data = await res.json();
-        setPurchases(data || []);
+        const data = await getPurchases(user.email);
+        setPurchases(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Failed to fetch purchases", error);
       } finally {

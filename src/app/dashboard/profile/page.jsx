@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useProfile } from "@/context/ProfileContext";
 import { getArtworks } from "@/lib/api/artworks";
+import { getPurchases } from "@/lib/api/buyer";
 import { Button } from "@heroui/react";
 import {
   Camera,
@@ -71,18 +72,17 @@ const CommonProfilePage = () => {
     if (!user?.email) return;
     const fetchData = async () => {
       try {
-        const [profileRes, purchasesRes, artworksData] = await Promise.all([
+        const [profileRes, purchasesData, artworksData] = await Promise.all([
           fetch(`${BASE_URL}/api/profiles/${user.email}`, { cache: "no-store" }),
-          fetch(`${BASE_URL}/api/purchases?email=${encodeURIComponent(user.email)}`),
+          getPurchases(user.email).catch(() => []),
           getArtworks(user.email).catch(() => [])
         ]);
         
         const data = await profileRes.json();
-        const purchasesData = await purchasesRes.json();
 
         setProfile(data);
         setArtworksCount(artworksData.length || 0);
-        setPurchases(purchasesData || []);
+        setPurchases(Array.isArray(purchasesData) ? purchasesData : []);
         
         setFormData({
           name: data.name || user.name || "",

@@ -6,6 +6,8 @@ import { Search, Filter, ChevronDown, Download, ImageIcon, CreditCard, Crown, Co
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 
+import { getPurchases } from "@/lib/api/buyer";
+
 const BuyerDashboard = () => {
   const [purchases, setPurchases] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
@@ -53,10 +55,7 @@ const BuyerDashboard = () => {
 
     const fetchPurchases = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/purchases?email=${encodeURIComponent(user.email)}`,
-        );
-        const data = await res.json();
+        const data = await getPurchases(user.email);
         setPurchases(data || []);
       } catch (error) {
         console.error("Failed to fetch purchases", error);

@@ -8,6 +8,8 @@ import { ExternalLink, Search, Filter, ImageIcon, Heart, ChevronLeft, ChevronRig
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 
+import { getSavedArtworks, toggleSavedArtwork } from "@/lib/api/buyer";
+
 const SavedArtworksPage = () => {
   const [savedArtworks, setSavedArtworks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,10 +46,7 @@ const SavedArtworksPage = () => {
 
     const fetchSavedArtworks = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/saved-artworks/${encodeURIComponent(user.email)}`,
-        );
-        const data = await res.json();
+        const data = await getSavedArtworks(user.email);
         setSavedArtworks(data || []);
       } catch (error) {
         console.error("Failed to fetch saved artworks", error);
@@ -93,15 +92,9 @@ const SavedArtworksPage = () => {
 
   const handleUnsave = async (artworkId) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/saved-artworks/toggle`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email, artworkId }),
-      });
-      if (res.ok) {
-        setSavedArtworks(prev => prev.filter(a => a._id !== artworkId));
-        toast.success("Removed from saved artworks", { duration: 2000 });
-      }
+      await toggleSavedArtwork(user.email, artworkId);
+      setSavedArtworks(prev => prev.filter(a => a._id !== artworkId));
+      toast.success("Removed from saved artworks", { duration: 2000 });
     } catch (e) {
       console.error(e);
       toast.error("Failed to remove artwork");
