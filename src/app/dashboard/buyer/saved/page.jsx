@@ -8,7 +8,7 @@ import { ExternalLink, Search, Filter, ImageIcon, Heart, ChevronLeft, ChevronRig
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 
-export default function SavedArtworksPage() {
+const SavedArtworksPage = () => {
   const [savedArtworks, setSavedArtworks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -374,3 +374,5 @@ export default function SavedArtworksPage() {
     </div>
   );
 }
+
+export default SavedArtworksPage;

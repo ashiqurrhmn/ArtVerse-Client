@@ -6,7 +6,7 @@ import { Search, Filter, ChevronDown, Download, ImageIcon, CreditCard, Crown, Co
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 
-export default function BuyerDashboard() {
+const BuyerDashboard = () => {
   const [purchases, setPurchases] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -577,3 +577,5 @@ export default function BuyerDashboard() {
     </div>
   );
 }
+
+export default BuyerDashboard;

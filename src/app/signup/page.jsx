@@ -9,7 +9,7 @@ import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
 import { ShoppingBag, Palette } from "lucide-react";
 
-export default function SignUpPage() {
+const SignUpPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = async (e) => {
@@ -32,7 +32,7 @@ export default function SignUpPage() {
         ...dataToSend,
         plan: "free",
       });
-      
+
       if (error) {
         authError = error.message || "Failed to sign up";
       }
@@ -47,16 +47,15 @@ export default function SignUpPage() {
       return;
     }
 
+    toast.success("Successfully signed up!");
     redirect("/");
   };
 
   const handleGoogleSignIn = async () => {
     const data = await authClient.signIn.social({
-    provider: "google",
-  });
+      provider: "google",
+    });
   };
-    
-  
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2A3B22]/80 backdrop-blur-sm p-4">
@@ -91,7 +90,7 @@ export default function SignUpPage() {
             transition={{ duration: 0.4, delay: 0.1 }}
             className="w-full max-w-xs flex flex-col items-center"
           >
-           <Image src="/logo.png" alt="Logo" width={150} height={150} />
+            <Image src="/logo.png" alt="Logo" width={150} height={150} />
             <h2 className="text-base text-muted-foreground font-medium mt-3 mb-7">
               Create your Account
             </h2>
@@ -161,20 +160,36 @@ export default function SignUpPage() {
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <label className="group relative flex cursor-pointer rounded-lg border border-separator bg-transparent p-2.5 shadow-sm hover:bg-accent/10 focus:outline-none transition-colors">
-                    <input type="radio" name="role" value="buyer" className="peer sr-only" required />
+                    <input
+                      type="radio"
+                      name="role"
+                      value="buyer"
+                      className="peer sr-only"
+                      required
+                    />
                     <div className="flex w-full items-center justify-center gap-2">
                       <ShoppingBag className="w-4 h-4 text-muted-foreground group-hover:text-primary peer-checked:text-primary transition-colors" />
-                      <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground peer-checked:text-foreground transition-colors">Buyer</span>
+                      <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground peer-checked:text-foreground transition-colors">
+                        Buyer
+                      </span>
                     </div>
                     <div className="absolute inset-0 rounded-lg border-2 border-transparent peer-checked:border-primary pointer-events-none transition-all" />
                     <div className="absolute inset-0 rounded-lg bg-primary/5 opacity-0 peer-checked:opacity-100 pointer-events-none transition-all" />
                   </label>
 
                   <label className="group relative flex cursor-pointer rounded-lg border border-separator bg-transparent p-2.5 shadow-sm hover:bg-accent/10 focus:outline-none transition-colors">
-                    <input type="radio" name="role" value="artist" className="peer sr-only" required />
+                    <input
+                      type="radio"
+                      name="role"
+                      value="artist"
+                      className="peer sr-only"
+                      required
+                    />
                     <div className="flex w-full items-center justify-center gap-2">
                       <Palette className="w-4 h-4 text-muted-foreground group-hover:text-primary peer-checked:text-primary transition-colors" />
-                      <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground peer-checked:text-foreground transition-colors">Artist</span>
+                      <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground peer-checked:text-foreground transition-colors">
+                        Artist
+                      </span>
                     </div>
                     <div className="absolute inset-0 rounded-lg border-2 border-transparent peer-checked:border-primary pointer-events-none transition-all" />
                     <div className="absolute inset-0 rounded-lg bg-primary/5 opacity-0 peer-checked:opacity-100 pointer-events-none transition-all" />
@@ -206,7 +221,10 @@ export default function SignUpPage() {
             </div>
 
             {/* Google */}
-            <button onClick={handleGoogleSignIn} className="w-full flex items-center justify-center gap-2 border border-separator bg-background text-foreground text-sm font-medium py-3 rounded-full hover:bg-accent/30 transition-colors shadow-sm">
+            <button
+              onClick={handleGoogleSignIn}
+              className="w-full flex items-center justify-center gap-2 border border-separator bg-background text-foreground text-sm font-medium py-3 rounded-full hover:bg-accent/30 transition-colors shadow-sm"
+            >
               <FcGoogle className="text-lg" />
               Sign up with Google
             </button>
@@ -227,3 +245,5 @@ export default function SignUpPage() {
     </div>
   );
 }
+
+export default SignUpPage;

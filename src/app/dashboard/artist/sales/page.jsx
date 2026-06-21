@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-export default function SalesHistoryPage() {
+const SalesHistoryPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sales, setSales] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +31,8 @@ export default function SalesHistoryPage() {
     { value: "price-low", label: "Amount: Low to High" },
   ];
 
-  const currentSortLabel = sortOptions.find((opt) => opt.value === sortBy)?.label || "Newest First";
+  const currentSortLabel =
+    sortOptions.find((opt) => opt.value === sortBy)?.label || "Newest First";
 
   const { data: session } = authClient.useSession();
   const user = session?.user;
@@ -48,7 +49,7 @@ export default function SalesHistoryPage() {
           `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"}/api/sales/${encodeURIComponent(user.email)}`,
         );
         const data = await res.json();
-        setSales(data || []);
+        setSales(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Failed to fetch sales", error);
       } finally {
@@ -63,7 +64,7 @@ export default function SalesHistoryPage() {
     (sale) =>
       sale.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sale.buyerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sale.buyerEmail?.toLowerCase().includes(searchTerm.toLowerCase())
+      sale.buyerEmail?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const sortedSales = [...filteredSales].sort((a, b) => {
@@ -82,7 +83,10 @@ export default function SalesHistoryPage() {
   // Pagination Logic
   const totalPages = Math.ceil(sortedSales.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedSales = sortedSales.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedSales = sortedSales.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -96,52 +100,74 @@ export default function SalesHistoryPage() {
     if (sortedSales.length === 0) return;
 
     if (format === "csv") {
-      const headers = ["Transaction ID", "Artwork Title", "Buyer Name", "Buyer Email", "Purchase Date", "Status", "Amount (USD)"];
-      
-      const rows = sortedSales.map(sale => [
+      const headers = [
+        "Transaction ID",
+        "Artwork Title",
+        "Buyer Name",
+        "Buyer Email",
+        "Purchase Date",
+        "Status",
+        "Amount (USD)",
+      ];
+
+      const rows = sortedSales.map((sale) => [
         sale.id,
         `"${(sale.title || "").replace(/"/g, '""')}"`,
         `"${(sale.buyerName || "").replace(/"/g, '""')}"`,
         sale.buyerEmail,
         `"${sale.date}"`,
         sale.status,
-        sale.amount
+        sale.amount,
       ]);
 
       const csvContent = [
         headers.join(","),
-        ...rows.map(r => r.join(","))
+        ...rows.map((r) => r.join(",")),
       ].join("\n");
 
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `sales_history_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute(
+        "download",
+        `sales_history_${new Date().toISOString().split("T")[0]}.csv`,
+      );
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } else if (format === "pdf") {
       const doc = new jsPDF();
-      
+
       doc.setFontSize(18);
       doc.text("Sales History Report", 14, 22);
-      
+
       doc.setFontSize(11);
       doc.setTextColor(100);
-      doc.text(`Generated on: ${new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })}`, 14, 30);
-      
-      const tableColumn = ["Transaction ID", "Artwork Title", "Buyer", "Date", "Status", "Amount"];
+      doc.text(
+        `Generated on: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}`,
+        14,
+        30,
+      );
+
+      const tableColumn = [
+        "Transaction ID",
+        "Artwork Title",
+        "Buyer",
+        "Date",
+        "Status",
+        "Amount",
+      ];
       const tableRows = [];
 
-      sortedSales.forEach(sale => {
+      sortedSales.forEach((sale) => {
         const saleData = [
           sale.id,
           sale.title,
           sale.buyerName,
           sale.date,
           sale.status,
-          `$${sale.amount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+          `$${sale.amount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
         ];
         tableRows.push(saleData);
       });
@@ -150,18 +176,17 @@ export default function SalesHistoryPage() {
         head: [tableColumn],
         body: tableRows,
         startY: 35,
-        theme: 'striped',
+        theme: "striped",
         styles: { fontSize: 9 },
         headStyles: { fillColor: [41, 128, 185] },
       });
 
-      doc.save(`sales_history_${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.save(`sales_history_${new Date().toISOString().split("T")[0]}.pdf`);
     }
   };
 
   return (
     <div className="min-h-full text-foreground px-4 md:px-6 pb-16">
-      
       {/* ── Page Header ── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-8">
         <div>
@@ -176,27 +201,37 @@ export default function SalesHistoryPage() {
             Sales History
           </h1>
           <p className="mt-2 text-base text-muted-foreground max-w-xl">
-            Track your sold artworks, analyze buyer trends, and manage your revenue.
+            Track your sold artworks, analyze buyer trends, and manage your
+            revenue.
           </p>
         </div>
 
         {/* Quick Stats Summary */}
         <div className="flex items-center gap-4 bg-accent/30 dark:bg-accent/20 border border-separator rounded-xl px-5 py-3 shadow-sm">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Total Revenue</p>
-            <p className="text-xl font-bold text-foreground">{isLoading ? "-" : `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Total Revenue
+            </p>
+            <p className="text-xl font-bold text-foreground">
+              {isLoading
+                ? "-"
+                : `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+            </p>
           </div>
           <div className="w-px h-10 bg-separator mx-2" />
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Artworks Sold</p>
-            <p className="text-xl font-bold text-foreground">{isLoading ? "-" : sales.length}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Artworks Sold
+            </p>
+            <p className="text-xl font-bold text-foreground">
+              {isLoading ? "-" : sales.length}
+            </p>
           </div>
         </div>
       </div>
 
       {/* ── Main Content Area ── */}
       <div className="rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6 shadow-xl shadow-black/5 dark:shadow-none">
-        
         {/* Toolbar: Search & Filters */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
           <div className="relative w-full sm:max-w-xs">
@@ -253,7 +288,7 @@ export default function SalesHistoryPage() {
               )}
             </div>
             <div className="relative w-full sm:w-auto">
-              <button 
+              <button
                 onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)}
                 disabled={sortedSales.length === 0}
                 className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-lg border border-separator bg-background px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-accent/40 text-foreground disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
@@ -324,48 +359,75 @@ export default function SalesHistoryPage() {
                   </tr>
                 ) : paginatedSales.length > 0 ? (
                   paginatedSales.map((sale) => (
-                    <tr key={sale.id} className="transition-colors hover:bg-accent/30 dark:hover:bg-accent/20 group">
+                    <tr
+                      key={sale.id}
+                      className="transition-colors hover:bg-accent/30 dark:hover:bg-accent/20 group"
+                    >
                       <td className="px-6 py-4">
-                        <span className="font-semibold text-foreground">{sale.title}</span>
+                        <span className="font-semibold text-foreground">
+                          {sale.title}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           {sale.buyerAvatar ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={sale.buyerAvatar} alt={sale.buyerName} className="size-8 rounded-full object-cover bg-muted" />
+                            <img
+                              src={sale.buyerAvatar}
+                              alt={sale.buyerName}
+                              className="size-8 rounded-full object-cover bg-muted"
+                            />
                           ) : (
                             <div className="size-8 rounded-full bg-muted border border-separator flex items-center justify-center font-bold text-xs">
                               {sale.buyerName?.charAt(0)?.toUpperCase()}
                             </div>
                           )}
-                          <span className="font-medium text-foreground">{sale.buyerName}</span>
+                          <span className="font-medium text-foreground">
+                            {sale.buyerName}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-muted-foreground">{sale.buyerEmail}</span>
+                        <span className="text-muted-foreground">
+                          {sale.buyerEmail}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground">{sale.date}</td>
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {sale.date}
+                      </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                          sale.status === "Completed" 
-                            ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20" 
-                            : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
-                        }`}>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                            sale.status === "Completed"
+                              ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20"
+                              : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                          }`}
+                        >
                           {sale.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right font-bold text-foreground">
-                        ${sale.amount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        $
+                        {sale.amount?.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                        })}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-muted-foreground">
+                    <td
+                      colSpan="6"
+                      className="px-6 py-12 text-center text-muted-foreground"
+                    >
                       <div className="flex flex-col items-center justify-center">
                         <ReceiptIcon className="size-10 opacity-20 mb-3" />
-                        <p className="font-semibold text-foreground">No sales found</p>
-                        <p className="text-sm mt-1">Try adjusting your search filters.</p>
+                        <p className="font-semibold text-foreground">
+                          No sales found
+                        </p>
+                        <p className="text-sm mt-1">
+                          Try adjusting your search filters.
+                        </p>
                       </div>
                     </td>
                   </tr>
@@ -427,7 +489,10 @@ export default function SalesHistoryPage() {
                   pageNum === currentPage + 2
                 ) {
                   return (
-                    <span key={pageNum} className="px-2 py-1.5 text-muted-foreground">
+                    <span
+                      key={pageNum}
+                      className="px-2 py-1.5 text-muted-foreground"
+                    >
                       ...
                     </span>
                   );
@@ -445,11 +510,10 @@ export default function SalesHistoryPage() {
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );
-}
+};
 
 // Inline Icon to avoid extra imports
 function ReceiptIcon(props) {
@@ -472,3 +536,5 @@ function ReceiptIcon(props) {
     </svg>
   );
 }
+
+export default SalesHistoryPage;

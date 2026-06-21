@@ -113,7 +113,7 @@ function SuccessContent() {
   );
 }
 
-export default function SuccessPage() {
+const SuccessPage = () => {
   return (
     <main className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background ambient glow */}
@@ -131,3 +131,5 @@ export default function SuccessPage() {
     </main>
   );
 }
+
+export default SuccessPage;

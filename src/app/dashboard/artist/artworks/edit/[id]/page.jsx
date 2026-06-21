@@ -16,11 +16,11 @@ const categories = [
   { key: "mixed", label: "Mixed Media" },
 ];
 
-export default function EditArtworkPage() {
+const EditArtworkPage = () => {
   const router = useRouter();
   const params = useParams();
   const id = params?.id;
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [artwork, setArtwork] = useState(null);
@@ -72,10 +72,10 @@ export default function EditArtworkPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
-    
+
     let imageUrl = artwork?.image || "";
 
     if (imageFile) {
@@ -84,12 +84,15 @@ export default function EditArtworkPage() {
 
       try {
         const imgbbApiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
-        const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
-          method: "POST",
-          body: imgbbFormData,
-        });
+        const imgbbRes = await fetch(
+          `https://api.imgbb.com/1/upload?key=${imgbbApiKey}`,
+          {
+            method: "POST",
+            body: imgbbFormData,
+          },
+        );
         const imgbbData = await imgbbRes.json();
-        
+
         if (imgbbData.success) {
           imageUrl = imgbbData.data.display_url;
         } else {
@@ -106,11 +109,11 @@ export default function EditArtworkPage() {
     }
 
     const artworkData = {
-        title: data.title,
-        description: data.description,
-        category: data.category,
-        price: data.price,
-        image: imageUrl,
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      price: data.price,
+      image: imageUrl,
     };
 
     try {
@@ -135,7 +138,9 @@ export default function EditArtworkPage() {
       <div className="flex h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground font-semibold">Loading artwork details...</p>
+          <p className="text-muted-foreground font-semibold">
+            Loading artwork details...
+          </p>
         </div>
       </div>
     );
@@ -146,8 +151,13 @@ export default function EditArtworkPage() {
       <div className="flex h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <ImageIcon className="size-16 text-muted-foreground/30" />
         <h2 className="text-xl font-bold text-foreground">Artwork Not Found</h2>
-        <p className="text-muted-foreground">The artwork you are trying to edit does not exist.</p>
-        <Link href="/dashboard/artist/artworks" className="mt-4 text-primary hover:underline font-semibold">
+        <p className="text-muted-foreground">
+          The artwork you are trying to edit does not exist.
+        </p>
+        <Link
+          href="/dashboard/artist/artworks"
+          className="mt-4 text-primary hover:underline font-semibold"
+        >
           Return to Artworks
         </Link>
       </div>
@@ -173,7 +183,10 @@ export default function EditArtworkPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start"
+      >
         {/* ── LEFT COLUMN ── */}
         <div className="space-y-8">
           {/* Artwork Details Card */}
@@ -186,7 +199,10 @@ export default function EditArtworkPage() {
             <div className="space-y-5">
               {/* Title */}
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="title" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                <label
+                  htmlFor="title"
+                  className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                >
                   Title <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -202,7 +218,10 @@ export default function EditArtworkPage() {
 
               {/* Description */}
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="description" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                <label
+                  htmlFor="description"
+                  className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                >
                   Description <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -220,12 +239,17 @@ export default function EditArtworkPage() {
 
           {/* Classification & Pricing Card */}
           <section className="rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6 shadow-xl shadow-black/5 dark:shadow-none">
-            <h2 className="text-base font-semibold mb-5">Classification & Pricing</h2>
+            <h2 className="text-base font-semibold mb-5">
+              Classification & Pricing
+            </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Category */}
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="category" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                <label
+                  htmlFor="category"
+                  className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                >
                   Category <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -236,24 +260,44 @@ export default function EditArtworkPage() {
                     defaultValue={artwork.category}
                     className="w-full rounded-xl border border-separator bg-background px-4 py-3 text-sm text-foreground outline-none transition-colors appearance-none cursor-pointer focus:border-primary focus:ring-2 focus:ring-primary/20"
                   >
-                    <option value="" disabled>Select a category</option>
+                    <option value="" disabled>
+                      Select a category
+                    </option>
                     {categories.map((cat) => (
-                      <option key={cat.key} value={cat.key}>{cat.label}</option>
+                      <option key={cat.key} value={cat.key}>
+                        {cat.label}
+                      </option>
                     ))}
                   </select>
                   <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
                   </div>
                 </div>
               </div>
 
               {/* Price */}
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="price" className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                <label
+                  htmlFor="price"
+                  className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                >
                   Price (USD) <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">$</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
+                    $
+                  </span>
                   <input
                     id="price"
                     name="price"
@@ -282,11 +326,15 @@ export default function EditArtworkPage() {
 
             <div
               className={`relative flex min-h-[280px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all duration-200 overflow-hidden group
-                ${isDragging
-                  ? "border-primary bg-primary/5 scale-[1.01]"
-                  : "border-separator bg-background hover:border-primary/40 hover:bg-accent/20"
+                ${
+                  isDragging
+                    ? "border-primary bg-primary/5 scale-[1.01]"
+                    : "border-separator bg-background hover:border-primary/40 hover:bg-accent/20"
                 }`}
-              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
             >
@@ -314,13 +362,21 @@ export default function EditArtworkPage() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-3 p-6 text-center pointer-events-none">
-                  <div className={`rounded-full p-3.5 transition-colors duration-200 ${isDragging ? "bg-primary/15 text-primary" : "bg-muted/50 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10"}`}>
+                  <div
+                    className={`rounded-full p-3.5 transition-colors duration-200 ${isDragging ? "bg-primary/15 text-primary" : "bg-muted/50 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10"}`}
+                  >
                     <UploadCloud className="size-6" />
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground text-sm">Drag & drop your image</p>
-                    <p className="text-xs text-muted-foreground mt-1">or click to browse</p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-2">JPG, PNG, WEBP — Max 10MB</p>
+                    <p className="font-semibold text-foreground text-sm">
+                      Drag & drop your image
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      or click to browse
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-2">
+                      JPG, PNG, WEBP — Max 10MB
+                    </p>
                   </div>
                 </div>
               )}
@@ -352,4 +408,6 @@ export default function EditArtworkPage() {
       </form>
     </div>
   );
-}
+};
+
+export default EditArtworkPage;

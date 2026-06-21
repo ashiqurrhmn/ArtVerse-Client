@@ -21,7 +21,7 @@ import toast from "react-hot-toast";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
 
-export default function PublicArtistProfilePage() {
+const PublicArtistProfilePage = () => {
   const params = useParams();
   const email = decodeURIComponent(params?.email || "");
 
@@ -412,3 +412,5 @@ export default function PublicArtistProfilePage() {
     </div>
   );
 }
+
+export default PublicArtistProfilePage;

@@ -13,7 +13,7 @@ const categories = [
   { key: "mixed", label: "Mixed Media" },
 ];
 
-export default function BrowseArtworksPage() {
+const BrowseArtworksPage = () => {
   const [artworks, setArtworks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -310,3 +310,5 @@ export default function BrowseArtworksPage() {
     </main>
   );
 }
+
+export default BrowseArtworksPage;

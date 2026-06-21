@@ -1,6 +1,6 @@
 import { Settings, Wrench } from "lucide-react";
 
-export default function ArtistSettingsPage() {
+const ArtistSettingsPage = () => {
   return (
     <div className="flex h-full min-h-[70vh] flex-col items-center justify-center p-6 text-center">
       <div className="relative mb-6">
@@ -26,3 +26,5 @@ export default function ArtistSettingsPage() {
     </div>
   );
 }
+
+export default ArtistSettingsPage;

@@ -24,7 +24,7 @@ import toast from "react-hot-toast";
 import { authClient } from "@/lib/auth-client";
 import CommentSection from "@/components/CommentSection";
 
-export default function ArtworkDetailsPage() {
+const ArtworkDetailsPage = () => {
   const params = useParams();
   const router = useRouter();
   const id = params?.id;
@@ -490,3 +490,5 @@ export default function ArtworkDetailsPage() {
     </main>
   );
 }
+
+export default ArtworkDetailsPage;

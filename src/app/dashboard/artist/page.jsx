@@ -6,7 +6,7 @@ import {
   Users,
   Zap,
   TrendingUp,
-  ArrowUpRight
+  ArrowUpRight,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -15,11 +15,11 @@ import { authClient } from "@/lib/auth-client";
 import { useProfile } from "@/context/ProfileContext";
 import { getArtworks } from "@/lib/api/artworks";
 
-export default function ArtistDashboard() {
+const ArtistDashboard = () => {
   const { data: session, isPending: sessionLoading } = authClient.useSession();
   const user = session?.user;
   const { profile } = useProfile();
-  
+
   const [artworks, setArtworks] = useState([]);
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,8 +28,8 @@ export default function ArtistDashboard() {
     if (user?.email) {
       const fetchArtworks = getArtworks(user.email);
       const fetchSales = fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"}/api/sales/${encodeURIComponent(user.email)}`
-      ).then(res => res.json());
+        `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"}/api/sales/${encodeURIComponent(user.email)}`,
+      ).then((res) => res.json());
 
       Promise.all([fetchArtworks, fetchSales])
         .then(([artworksData, salesData]) => {
@@ -37,7 +37,7 @@ export default function ArtistDashboard() {
           setSales(salesData || []);
           setLoading(false);
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("Failed to load dashboard data", err);
           setLoading(false);
         });
@@ -47,9 +47,13 @@ export default function ArtistDashboard() {
   const userName = profile?.name || user?.name || "Artist";
 
   // Dynamic Stats Calculation
-  const activeAuctions = artworks.filter(a => a.status?.toLowerCase() === "selling" || a.status?.toLowerCase() === "reviewing").length;
+  const activeAuctions = artworks.filter(
+    (a) =>
+      a.status?.toLowerCase() === "selling" ||
+      a.status?.toLowerCase() === "reviewing",
+  ).length;
   const totalRevenue = sales.reduce((acc, sale) => acc + (sale.amount || 0), 0);
-  
+
   const stats = [
     {
       icon: FileImage,
@@ -89,7 +93,7 @@ export default function ArtistDashboard() {
       return dateB - dateA;
     })
     .slice(0, 4)
-    .map(a => ({
+    .map((a) => ({
       id: a._id,
       name: a.title,
       category: a.category,
@@ -97,11 +101,13 @@ export default function ArtistDashboard() {
       price: `$${a.price}`,
       status: a.status || "Draft",
       image: a.image,
-      statusClass: (a.status?.toLowerCase() === "selling" || a.status?.toLowerCase() === "approved") 
-        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
-        : (a.status?.toLowerCase() === "reviewing")
-        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-        : "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
+      statusClass:
+        a.status?.toLowerCase() === "selling" ||
+        a.status?.toLowerCase() === "approved"
+          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+          : a.status?.toLowerCase() === "reviewing"
+            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+            : "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
     }));
 
   // Map to top artworks (aggregated by real sales)
@@ -110,15 +116,15 @@ export default function ArtistDashboard() {
       acc[sale.title] = { name: sale.title, sales: 0, revenue: 0 };
     }
     acc[sale.title].sales += 1;
-    acc[sale.title].revenue += (sale.amount || 0);
+    acc[sale.title].revenue += sale.amount || 0;
     return acc;
   }, {});
 
   let topArtworks = Object.values(topArtworksAgg)
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 4)
-    .map(agg => {
-      const art = artworks.find(a => a.title === agg.name);
+    .map((agg) => {
+      const art = artworks.find((a) => a.title === agg.name);
       return {
         id: agg.name,
         name: agg.name,
@@ -131,12 +137,12 @@ export default function ArtistDashboard() {
 
   // Pad to 4 artworks using most expensive if sales are less than 4
   if (topArtworks.length < 4) {
-    const soldArtworkNames = topArtworks.map(t => t.name);
+    const soldArtworkNames = topArtworks.map((t) => t.name);
     const unsoldArtworks = [...artworks]
-      .filter(a => !soldArtworkNames.includes(a.title))
+      .filter((a) => !soldArtworkNames.includes(a.title))
       .sort((a, b) => Number(b.price) - Number(a.price))
       .slice(0, 4 - topArtworks.length)
-      .map(a => ({
+      .map((a) => ({
         id: a._id || a.title,
         name: a.title,
         category: a.category || "Art",
@@ -152,7 +158,9 @@ export default function ArtistDashboard() {
       <div className="flex h-full min-h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="size-12 animate-spin rounded-full border-4 border-primary/20 border-t-primary"></div>
-          <p className="text-sm text-muted-foreground animate-pulse">Loading dashboard...</p>
+          <p className="text-sm text-muted-foreground animate-pulse">
+            Loading dashboard...
+          </p>
         </div>
       </div>
     );
@@ -160,7 +168,6 @@ export default function ArtistDashboard() {
 
   return (
     <div className="min-h-full text-foreground px-4 md:px-6 pb-16">
-      
       {/* ── Page Header ── */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
@@ -180,11 +187,14 @@ export default function ArtistDashboard() {
 
       {/* ── Main Content Grid ── */}
       <section className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(350px,1fr)] gap-8">
-        
         {/* Left: Recent Artworks */}
         <div className="rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6 shadow-xl shadow-black/5 dark:shadow-none flex flex-col">
-          <SectionHeader title="Recent Artworks" action="View all" href="/dashboard/artist/artworks" />
-          
+          <SectionHeader
+            title="Recent Artworks"
+            action="View all"
+            href="/dashboard/artist/artworks"
+          />
+
           <div className="overflow-hidden rounded-xl border border-separator bg-accent/20 dark:bg-accent/10 mt-4 flex-1">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[600px] text-left text-sm">
@@ -203,7 +213,10 @@ export default function ArtistDashboard() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="4" className="text-center py-8 text-muted-foreground">
+                      <td
+                        colSpan="4"
+                        className="text-center py-8 text-muted-foreground"
+                      >
                         No artworks found.
                       </td>
                     </tr>
@@ -216,8 +229,12 @@ export default function ArtistDashboard() {
 
         {/* Right: Top Artworks */}
         <div className="rounded-2xl border border-separator/60 bg-background/40 backdrop-blur-xl p-6 shadow-xl shadow-black/5 dark:shadow-none flex flex-col">
-          <SectionHeader title="Top Artworks" action="View sales" href="/dashboard/artist/sales" />
-          
+          <SectionHeader
+            title="Top Artworks"
+            action="View sales"
+            href="/dashboard/artist/sales"
+          />
+
           <div className="mt-4 flex flex-col gap-3 flex-1">
             {topArtworks.length > 0 ? (
               topArtworks.map((art, index) => (
@@ -230,11 +247,10 @@ export default function ArtistDashboard() {
             )}
           </div>
         </div>
-
       </section>
     </div>
   );
-}
+};
 
 /* ─── Sub-components ─── */
 
@@ -246,8 +262,14 @@ function StatCard({ icon: Icon, label, value, trend, trendUp }) {
           <Icon className="size-5" />
         </div>
         {trend && (
-          <span className={`inline-flex items-center gap-1 text-[11px] font-semibold ${trendUp ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}>
-            {trendUp ? <TrendingUp className="size-3" /> : <TrendingUp className="size-3 rotate-180" />}
+          <span
+            className={`inline-flex items-center gap-1 text-[11px] font-semibold ${trendUp ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500"}`}
+          >
+            {trendUp ? (
+              <TrendingUp className="size-3" />
+            ) : (
+              <TrendingUp className="size-3 rotate-180" />
+            )}
             {trend}
           </span>
         )}
@@ -283,15 +305,23 @@ function SectionHeader({ title, action, href }) {
   );
 }
 
-function ArtworkRow({ name, category, date, price, status, statusClass, image }) {
+function ArtworkRow({
+  name,
+  category,
+  date,
+  price,
+  status,
+  statusClass,
+  image,
+}) {
   return (
     <tr className="transition-colors hover:bg-accent/30 dark:hover:bg-accent/20 group">
       <td className="px-5 py-4">
         <div className="flex items-center gap-3">
           {image ? (
-            <img 
-              src={image} 
-              alt={name} 
+            <img
+              src={image}
+              alt={name}
               className="size-10 shrink-0 rounded-xl object-cover border border-separator shadow-sm"
             />
           ) : (
@@ -332,7 +362,7 @@ function TopArtworkRow({ index, name, category, sales, revenue, image }) {
           {index}
         </div>
       </div>
-      
+
       <div className="flex min-w-0 flex-1 flex-col justify-center">
         <p className="truncate text-sm font-bold text-foreground">{name}</p>
         <p className="truncate text-xs text-muted-foreground">{category}</p>
@@ -340,8 +370,12 @@ function TopArtworkRow({ index, name, category, sales, revenue, image }) {
 
       <div className="shrink-0 text-right">
         <p className="text-sm font-bold text-foreground">{revenue}</p>
-        <p className="text-[10px] font-semibold text-muted-foreground">{sales} sales</p>
+        <p className="text-[10px] font-semibold text-muted-foreground">
+          {sales} sales
+        </p>
       </div>
     </div>
   );
 }
+
+export default ArtistDashboard;

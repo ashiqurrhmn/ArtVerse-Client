@@ -36,7 +36,7 @@ async function uploadToImgbb(file) {
   return data.data.display_url;
 }
 
-export default function CommonProfilePage() {
+const CommonProfilePage = () => {
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
   const router = useRouter();
@@ -569,3 +569,5 @@ export default function CommonProfilePage() {
     </div>
   );
 }
+
+export default CommonProfilePage;

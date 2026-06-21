@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { ExternalLink, Search, Filter, ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
-export default function BoughtArtworksPage() {
+const BoughtArtworksPage = () => {
   const [purchases, setPurchases] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -361,3 +361,5 @@ export default function BoughtArtworksPage() {
     </div>
   );
 }
+
+export default BoughtArtworksPage;

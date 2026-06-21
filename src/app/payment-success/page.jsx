@@ -178,7 +178,7 @@ function SuccessContent() {
   );
 }
 
-export default function PaymentSuccessPage() {
+const PaymentSuccessPage = () => {
   return (
     <main className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background ambient glow */}
@@ -196,3 +196,5 @@ export default function PaymentSuccessPage() {
     </main>
   );
 }
+
+export default PaymentSuccessPage;

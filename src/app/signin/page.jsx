@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
 
-export default function SignInPage() {
+const SignInPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,6 +26,7 @@ export default function SignInPage() {
       if (error) {
         toast.error(error.message || "Failed to sign in");
       } else if (data?.user) {
+        toast.success("Successfully signed in!");
         if (data.user.role === "buyer") {
           router.push("/");
         } else if (data.user.role === "artist" || data.user.role === "admin") {
@@ -41,23 +42,24 @@ export default function SignInPage() {
       setIsLoading(false);
     }
   };
-    const handleGoogleSignIn = async () => {
-      const { data, error } = await authClient.signIn.social({
-        provider: "google",
-      });
+  const handleGoogleSignIn = async () => {
+    const { data, error } = await authClient.signIn.social({
+      provider: "google",
+    });
 
-      if (error) {
-        toast.error(error.message || "Failed to sign in with Google");
-      } else if (data?.user) {
-        if (data.user.role === "buyer") {
-          router.push("/");
-        } else if (data.user.role === "artist" || data.user.role === "admin") {
-          router.push(`/dashboard/${data.user.role}`);
-        } else {
-          router.push("/");
-        }
+    if (error) {
+      toast.error(error.message || "Failed to sign in with Google");
+    } else if (data?.user) {
+      toast.success("Successfully signed in!");
+      if (data.user.role === "buyer") {
+        router.push("/");
+      } else if (data.user.role === "artist" || data.user.role === "admin") {
+        router.push(`/dashboard/${data.user.role}`);
+      } else {
+        router.push("/");
       }
-    };
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2A3B22]/80 backdrop-blur-sm p-4">
@@ -82,7 +84,6 @@ export default function SignInPage() {
               />
             </div>
           </div>
-
         </div>
 
         {/* Right Panel — Form */}
@@ -126,7 +127,6 @@ export default function SignInPage() {
                   placeholder="••••••••"
                   className="w-full bg-transparent border-b border-separator py-2 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary transition-colors"
                 />
-                
               </div>
 
               {/* Submit */}
@@ -153,7 +153,10 @@ export default function SignInPage() {
             </div>
 
             {/* Google */}
-            <button onClick={handleGoogleSignIn} className="w-full flex items-center justify-center gap-2 border border-separator bg-background text-foreground text-sm font-medium py-3 rounded-full hover:bg-accent/30 transition-colors shadow-sm">
+            <button
+              onClick={handleGoogleSignIn}
+              className="w-full flex items-center justify-center gap-2 border border-separator bg-background text-foreground text-sm font-medium py-3 rounded-full hover:bg-accent/30 transition-colors shadow-sm"
+            >
               <FcGoogle className="text-lg" />
               Sign in with Google
             </button>
@@ -174,3 +177,5 @@ export default function SignInPage() {
     </div>
   );
 }
+
+export default SignInPage;

@@ -16,7 +16,7 @@ import { deleteArtwork } from "@/lib/actions/artworks";
 import toast from "react-hot-toast";
 import { authClient } from "@/lib/auth-client";
 
-export default function ManageArtworksPage() {
+const ManageArtworksPage = () => {
   const { data: session } = authClient.useSession();
   const user = session?.user;
   const [artworks, setArtworks] = useState([]);
@@ -34,11 +34,14 @@ export default function ManageArtworksPage() {
     setCurrentPage(1);
   }, [searchTerm, sortOption]);
 
+ console.log(session)
+
   useEffect(() => {
     const fetchArtworks = async () => {
       try {
         const data = await getArtworks();
         setArtworks(data || []);
+       
       } catch (error) {
         console.error("Failed to fetch artworks", error);
         toast.error("Failed to load artworks");
@@ -54,7 +57,7 @@ export default function ManageArtworksPage() {
     (artwork) =>
       artwork.email === user?.email &&
       (artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       artwork.category.toLowerCase().includes(searchTerm.toLowerCase()))
+        artwork.category.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   if (sortOption === "price-asc") {
@@ -62,15 +65,22 @@ export default function ManageArtworksPage() {
   } else if (sortOption === "price-desc") {
     filteredArtworks.sort((a, b) => Number(b.price) - Number(a.price));
   } else if (sortOption === "date-newest") {
-    filteredArtworks.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    filteredArtworks.sort(
+      (a, b) => new Date(b.date || 0) - new Date(a.date || 0),
+    );
   } else if (sortOption === "date-oldest") {
-    filteredArtworks.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+    filteredArtworks.sort(
+      (a, b) => new Date(a.date || 0) - new Date(b.date || 0),
+    );
   }
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredArtworks.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedArtworks = filteredArtworks.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedArtworks = filteredArtworks.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -205,7 +215,19 @@ export default function ManageArtworksPage() {
                 <option value="date-oldest">Date: Oldest First</option>
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
               </div>
             </div>
           </div>
@@ -425,7 +447,10 @@ export default function ManageArtworksPage() {
                   pageNum === currentPage + 2
                 ) {
                   return (
-                    <span key={pageNum} className="px-2 py-1.5 text-muted-foreground">
+                    <span
+                      key={pageNum}
+                      className="px-2 py-1.5 text-muted-foreground"
+                    >
                       ...
                     </span>
                   );
@@ -436,7 +461,9 @@ export default function ManageArtworksPage() {
 
             <button
               onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages || filteredArtworks.length === 0}
+              disabled={
+                currentPage === totalPages || filteredArtworks.length === 0
+              }
               className="px-3 py-1.5 text-sm font-medium text-foreground bg-background border border-separator rounded-lg hover:bg-muted/20 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
@@ -449,28 +476,29 @@ export default function ManageArtworksPage() {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-            onClick={() => setIsModalOpen(false)} 
+            onClick={() => setIsModalOpen(false)}
           />
-          
+
           {/* Modal Panel */}
           <div className="relative w-full max-w-md rounded-2xl border border-separator/60 bg-background/95 backdrop-blur-xl p-6 shadow-2xl animate-in zoom-in-95 fade-in duration-200">
             {/* Warning Icon */}
             <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-red-500/10 border border-red-500/20">
               <Trash2 className="size-5 text-red-500" />
             </div>
-            
+
             {/* Title */}
             <h3 className="text-center text-lg font-bold text-foreground mb-2">
               Delete Artwork
             </h3>
-            
+
             {/* Description */}
             <p className="text-center text-sm text-muted-foreground mb-6">
-              Are you sure you want to delete this artwork? This action is permanent and cannot be undone.
+              Are you sure you want to delete this artwork? This action is
+              permanent and cannot be undone.
             </p>
-            
+
             {/* Actions */}
             <div className="flex items-center gap-3">
               <button
@@ -491,4 +519,6 @@ export default function ManageArtworksPage() {
       )}
     </div>
   );
-}
+};
+
+export default ManageArtworksPage;
