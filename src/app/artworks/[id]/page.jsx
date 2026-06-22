@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getArtworkById } from "@/lib/api/artworks";
+import { toggleSavedArtwork } from "@/lib/api/buyer";
 import {
   ArrowLeft,
   Heart,
@@ -67,24 +68,16 @@ const ArtworkDetailsPage = () => {
     setIsSaved(!isSaved);
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/saved-artworks/toggle`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: user.email, artworkId: id }),
-        },
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const data = await toggleSavedArtwork(user.email, id);
+      
       setIsSaved(data.saved);
       toast.success(data.saved ? "Artwork saved!" : "Removed from saved", {
         duration: 2000,
       });
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error("toggleSave error:", err);
       setIsSaved(isSaved);
-      toast.error("Failed to update saved status");
+      toast.error(err.message || "Failed to update saved status");
     } finally {
       setIsSaving(false);
     }

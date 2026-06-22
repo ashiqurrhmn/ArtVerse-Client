@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
+import { toggleSavedArtwork } from "@/lib/api/buyer";
 
 export default function ArtworkCard({ artwork, index }) {
   const [isSaved, setIsSaved] = useState(false);
@@ -28,8 +29,10 @@ export default function ArtworkCard({ artwork, index }) {
   }, [user, artwork?._id]);
 
   const toggleSave = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     
     if (!user) {
       toast.error("Please log in to save artworks");
@@ -41,20 +44,15 @@ export default function ArtworkCard({ artwork, index }) {
     setIsSaved(!isSaved);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/saved-artworks/toggle`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email, artworkId: artwork._id }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const data = await toggleSavedArtwork(user.email, artwork._id);
+      
       setIsSaved(data.saved);
       toast.success(data.saved ? "Artwork saved!" : "Removed from saved", { duration: 2000 });
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error("toggleSave error:", err);
       // Revert optimistic update
       setIsSaved(isSaved);
-      toast.error("Failed to update saved status");
+      toast.error(err.message || "Failed to update saved status");
     } finally {
       setIsSaving(false);
     }

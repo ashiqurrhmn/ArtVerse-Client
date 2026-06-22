@@ -65,9 +65,16 @@ export const toggleSavedArtwork = async (email, artworkId) => {
     body: JSON.stringify({ email, artworkId }),
   });
   
+  let data;
+  try {
+    data = await res.json();
+  } catch (err) {
+    throw new Error("Invalid response from server");
+  }
+
   if (!res.ok) {
-      throw new Error("Failed to toggle artwork");
+      throw new Error(data?.error || "Failed to toggle artwork");
   }
   
-  return true;
+  return data;
 };
