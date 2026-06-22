@@ -40,8 +40,8 @@ const AdminManageUsers = () => {
 
   const getRoleLabel = () => {
     switch (filterRole) {
-      case "user":
-        return "Role: User";
+      case "buyer":
+        return "Role: Buyer";
       case "artist":
         return "Role: Artist";
       case "admin":
@@ -110,7 +110,10 @@ const AdminManageUsers = () => {
         .toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
       (user.email || "").toLowerCase().includes(searchQuery.toLowerCase());
-    const userRole = user.role || "user";
+    
+    const rawRole = user.role || "buyer";
+    const userRole = rawRole === "user" ? "buyer" : rawRole;
+    
     const matchesRole = filterRole === "all" || userRole === filterRole;
     return matchesSearch && matchesRole;
   });
@@ -130,12 +133,13 @@ const AdminManageUsers = () => {
   };
 
   const getRoleIcon = (role) => {
-    switch (role || "user") {
+    const normalizedRole = role === "user" || !role ? "buyer" : role;
+    switch (normalizedRole) {
       case "admin":
         return <Shield className="w-4 h-4 text-primary" />;
       case "artist":
         return <Paintbrush className="w-4 h-4 text-secondary" />;
-      case "user":
+      case "buyer":
         return <User className="w-4 h-4 text-muted-foreground" />;
       default:
         return <User className="w-4 h-4 text-muted-foreground" />;
@@ -143,12 +147,13 @@ const AdminManageUsers = () => {
   };
 
   const getRoleBadgeColor = (role) => {
-    switch (role || "user") {
+    const normalizedRole = role === "user" || !role ? "buyer" : role;
+    switch (normalizedRole) {
       case "admin":
         return "bg-primary/10 text-primary border-primary/20";
       case "artist":
         return "bg-secondary/10 text-secondary border-secondary/20";
-      case "user":
+      case "buyer":
         return "bg-muted/30 text-muted-foreground border-separator";
       default:
         return "bg-muted/30 text-muted-foreground border-separator";
@@ -183,7 +188,7 @@ const AdminManageUsers = () => {
         const rowData = [
           user.profileName || user.name || "Unknown",
           user.email,
-          user.role || "user",
+          user.role === "user" || !user.role ? "buyer" : user.role,
           "Active",
         ];
         tableRows.push(rowData);
@@ -256,7 +261,7 @@ const AdminManageUsers = () => {
                   >
                     {[
                       { value: "all", label: "All Roles" },
-                      { value: "user", label: "Role: User" },
+                      { value: "buyer", label: "Role: Buyer" },
                       { value: "artist", label: "Role: Artist" },
                       { value: "admin", label: "Role: Admin" },
                     ].map((option) => (
@@ -393,7 +398,7 @@ const AdminManageUsers = () => {
                       >
                         {getRoleIcon(user.role)}
                         <span className="capitalize">
-                          {user.role || "user"}
+                          {user.role === "user" || !user.role ? "buyer" : user.role}
                         </span>
                       </div>
                     </td>
@@ -404,16 +409,16 @@ const AdminManageUsers = () => {
                       <div className="relative w-32 md:w-full md:max-w-[140px]">
                         <select
                           className="appearance-none bg-background border border-separator text-foreground text-sm rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary block w-full p-2 pr-8 cursor-pointer hover:bg-muted/10 transition-colors outline-none shadow-sm"
-                          value={user.role || "user"}
+                          value={user.role === "user" || !user.role ? "buyer" : user.role}
                           onChange={(e) =>
                             handleRoleChange(user._id, e.target.value)
                           }
                         >
                           <option
-                            value="user"
+                            value="buyer"
                             className="bg-background text-foreground"
                           >
-                            User
+                            Buyer
                           </option>
                           <option
                             value="artist"

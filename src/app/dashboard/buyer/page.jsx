@@ -204,10 +204,6 @@ const BuyerDashboard = () => {
                 </>
               )}
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:brightness-110 transition-all shadow-sm">
-              <Download className="w-4 h-4" />
-              Export
-            </button>
           </div>
         </div>
 
