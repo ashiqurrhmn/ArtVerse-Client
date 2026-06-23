@@ -30,6 +30,7 @@ const AdminDashboard = () => {
     totalArtworks: 0,
     pendingApprovals: 0,
     totalRevenue: 0,
+    artworksSold: 0,
     salesData: [],
     categoryData: []
   });
@@ -45,6 +46,7 @@ const AdminDashboard = () => {
             totalArtworks: data.totalArtworks || 0,
             pendingApprovals: data.pendingApprovals || 0,
             totalRevenue: data.totalRevenue || 0,
+            artworksSold: data.artworksSold || 0,
             salesData: data.salesData || [],
             categoryData: data.categoryData || []
           });
