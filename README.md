@@ -10,7 +10,7 @@
 [![Stripe](https://img.shields.io/badge/Stripe-Payments-635BFF?style=for-the-badge&logo=stripe)](https://stripe.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-06B6D4?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 
-A **production-grade** digital art marketplace with multi-role authentication, secure Stripe payments, distinct artist/buyer/admin dashboards, and a modern, responsive UI.
+A **production-grade** original art marketplace with multi-role authentication, secure Stripe payments, distinct artist/buyer/admin dashboards, and a modern, responsive UI.
 
 </div>
 
